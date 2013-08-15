@@ -8,8 +8,8 @@ Developed By
 
 * Pedro Barosa - <pdrinhobarbosa@gmail.com>
 
-Ex
-==
+Steps
+=====
 
 1 - Put the follow tags on application tag on AndroidManifest.xml:
 ```xml

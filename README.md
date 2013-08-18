@@ -30,4 +30,4 @@ This script must be formatted in UTF-8 encoding and must use UNIX format.
 
 At Notepad++ you can put your script with this specifications as bellow:
 
-- [1] Open your script on notepad++
+1 - Open your script on notepad++

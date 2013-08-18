@@ -18,8 +18,8 @@ Steps
 ```
 2 - Create a script to make your database.
   
-  This script must be in 'raw' folder at 'res' Android's application folder. 
-  It must have the follow name: '<DB_NAME><DB_VERSION>.sql'
+This script must be in 'raw' folder at 'res' Android's application folder. 
+It must have the follow name: '<DB_NAME><DB_VERSION>.sql'
   
-  For example: if you use the same name and version from tags of 1º step, your script file must have the follow name: 
-	  'Application1.sql'
+For example: if you use the same name and version from tags of 1º step, your script file must have the follow name: 
+  'Application1.sql'

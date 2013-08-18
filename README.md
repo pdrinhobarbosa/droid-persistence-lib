@@ -186,7 +186,9 @@ switch (URI_MATCHER.match(uri)) {
 }
 ```
 
-7 - Delete cascade:
+7 - Delete relationships:
+
+To delete relationships when you delet the main object, implement the method 'deleteRalationships(Uri uri, String selection, String[] selectionArgs)'
 ```java
 ArrayList<Long> idsList = new ArrayList<Long>();
 Cursor cursor;

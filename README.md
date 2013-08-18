@@ -62,5 +62,13 @@ SEPARATOR: '/';
 'CONTENT + Authority + SEPARATOR + <your class name>';
 ```
 	You can change this sub-writing the method 'getContentUri()' from ProviderHelper.
-	
+
+4 - Register your provider.
+```xml
+<provider
+	android:name="<YOUR_PROVIDER_CLASS>"
+        android:authorities="<Authority>"
+        android:exported="false"
+        android:multiprocess="true" />
+```
 	

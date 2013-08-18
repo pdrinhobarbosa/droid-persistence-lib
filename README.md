@@ -114,7 +114,7 @@ public class User extends BaseEntity {
 	
 	The @DplList Annotation is used to identify your Collections
 
-	- Many_To_One:
+- Many_To_One:
 
 ```java
 public class People extends BaseEntity {
@@ -130,9 +130,9 @@ public class Phone extends BaseEntity {
 	private People people;
 }
 ```
-	- Many_To_Many:
+- Many_To_Many:
 	 
-		This example will use a relationship table.
+	This example will use a relationship table.
 
 ```java
 public class User extends BaseEntity {

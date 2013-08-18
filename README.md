@@ -26,7 +26,7 @@ It must have the follow name:
 
 For example: if you use the same name and version from tags of 1º step, your script file must have the follow name: 
 ```
-'Application1.sql'
+Application1.sql
 ```
 
 All tables must contains the column '_id' that is required for provider.
@@ -37,3 +37,18 @@ At Notepad++ you can put your script with this specifications as bellow:
     1 - Open your script on notepad++
     2 - Go to menu Format > convert to UTF-8
     3 - Go to menu Edit > convert end line > convert to format UNIX 
+    
+3 - Implement your provider:
+
+Create a new class that extends 'DplProvider' from this lib.
+
+Implement the methods to map your database tables and 'MATCHER_URI' from provider and the method that return your application's 'R.class'.
+
+- Authority:
+  By default, the lib will create the authority for your provider with the follow name: 
+      ```
+      <your_app_package>.provider
+      ```
+	You can change this sub-writing the method 'getAuthority' from DplProvider.
+	
+	

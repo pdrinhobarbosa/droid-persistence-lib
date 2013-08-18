@@ -100,15 +100,15 @@ public class User extends BaseEntity {
 	private String password;
 }
 ```
-For this situation, your database must have a column for User at People's table.
+	For this situation, your database must have a column for User at People's table.
 
-The lib will put the '_id' attribute at this column.
+	The lib will put the '_id' attribute at this column.
 
-If you create a new People, the lib will create a new User if this not exist.
+	If you create a new People, the lib will create a new User if this not exist.
 
-But to get a People from database, the lib will put only a User object with '_id' attribute of User loaded.
+	But to get a People from database, the lib will put only a User object with '_id' attribute of User loaded.
 
-Use @DplObject(save=false) to define relationship with sub-object, but don't save on cascade.
+	Use @DplObject(save=false) to define relationship with sub-object, but don't save on cascade.
 
 - Many_To_One and Many_To_Many: (use @DplList)
 	

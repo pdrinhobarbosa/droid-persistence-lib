@@ -114,7 +114,7 @@ Use @DplObject(save=false) to define relationship with sub-object, but don't sav
 	
 	The @DplList Annotation is used to identify your Collections
 
-	- Many_To_One:
+	# Many_To_One:
 
 ```java
 public class People extends BaseEntity {

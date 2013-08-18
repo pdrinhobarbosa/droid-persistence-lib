@@ -162,9 +162,9 @@ public class UserRole extends BaseEntity {
 
 6 - Notifying JOINS:
 
-	This example use the USER_CODE and ROLE_CODE mapped on URI_MATCHER to notify UserRole uri that user or role data has changed.
+This example use the USER_CODE and ROLE_CODE mapped on URI_MATCHER to notify UserRole uri that user or role data has changed.
 	
-	And use the following call to get content uri of UserRole.class:
+And use the following call to get content uri of UserRole.class:
 ```java	
 DplProvider.getContentUri(getContext(), UserRole.class)
 ```

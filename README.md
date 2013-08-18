@@ -47,9 +47,9 @@ Implement the methods to map your database tables and 'MATCHER_URI' from provide
 - Authority:
 
   By default, the lib will create the authority for your provider with the follow name: 
-      ```
-      <your_app_package>.provider
-      ```
+```
+<your_app_package>.provider
+```
 	You can change this sub-writing the method 'getAuthority' from DplProvider.
 	
 	

@@ -67,8 +67,8 @@ SEPARATOR: '/';
 ```xml
 <provider
 	android:name="<YOUR_PROVIDER_CLASS>"
-        android:authorities="<Authority>"
-        android:exported="false"
-        android:multiprocess="true" />
+	android:authorities="<Authority>"
+	android:exported="false"
+	android:multiprocess="true" />
 ```
 	

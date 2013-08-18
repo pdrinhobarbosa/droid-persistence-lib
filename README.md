@@ -168,6 +168,7 @@ And use the following call to get content uri of UserRole.class:
 ```java	
 DplProvider.getContentUri(getContext(), UserRole.class)
 ```
+Ex.:
 ```java
 switch (URI_MATCHER.match(uri)) {
 	case USER_CODE:
@@ -184,5 +185,32 @@ switch (URI_MATCHER.match(uri)) {
 ```
 
 7 - Delete cascade:
+```java
+ArrayList<Long> idsList = new ArrayList<Long>();
+Cursor cursor;
+String[] projection;
 
+switch (URI_MATCHER.match(uri)) {
+	case USER_CODE:
+		projection = new String[] {TimeDTO._ID};
+		cursor = query(uri, projection, selection, selectionArgs, null);
+
+		if (cursor.moveToFirst()) {
+			do {
+				idsList.add(cursor.getLong(cursor.getColumnIndex(User._ID)));
+			} while (cursor.moveToNext());
+
+			if (!idsList.isEmpty()) {
+				String ids = idsList.toString().replace("[", "").replace("]", "");
+			
+				String where = UserRole.USER + " IN(" + ids + ")";
+				delete(DplProvider.getContentUri(getContext(), UserRole.class), where, null);
+			}
+		}
+		break;
+
+	default:
+		break;
+	}
+```
 

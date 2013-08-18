@@ -160,6 +160,23 @@ public class UserRole extends BaseEntity {
 }
 ```
 
+6 - Notifying JOINS:
 
+```java
+switch (URI_MATCHER.match(uri)) {
+	case USER_CODE:
+		getContext().getContentResolver().notifyChange(DplProvider.getContentUri(getContext(), UserRole.class), null);
+		break;
+	
+	case ROLE_CODE:
+		getContext().getContentResolver().notifyChange(DplProvider.getContentUri(getContext(), UserRole.class), null);
+		break;
+
+	default:
+		break;
+}
+```
+
+7 - Delete cascade:
 
 

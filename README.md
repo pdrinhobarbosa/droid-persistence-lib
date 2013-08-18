@@ -111,6 +111,8 @@ But to get a People from database, the lib will put only a User object with '_id
 Use @DplObject(save=false) to define relationship with sub-object, but don't save on cascade.
 
 - Many_To_One and Many_To_Many: (use @DplList)
+	The @DplList Annotation is used to identify your Collections
+
 	- Many_To_One:
 
 ```java

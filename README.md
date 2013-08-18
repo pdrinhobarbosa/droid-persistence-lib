@@ -71,4 +71,4 @@ SEPARATOR: '/';
 	android:exported="false"
 	android:multiprocess="true" />
 ```
-	
+* You can read more about 'Content Providers' here: "http://developer.android.com/guide/topics/providers/content-providers.html"	

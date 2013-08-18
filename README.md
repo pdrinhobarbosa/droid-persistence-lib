@@ -46,10 +46,24 @@ Implement the methods to map your database tables and 'MATCHER_URI' from provide
 
 - Authority:
 
-  By default, the lib will create the authority for your provider with the follow name: 
+	By default, the lib will create the authority for your provider with the follow name: 
 ```
 <your_app_package>.provider
 ```
-	You can change this sub-writing the method 'getAuthority' from DplProvider.
+	You can change this sub-writing the method 'getAuthority()' from DplProvider.
+	
+- CONTENT_URI:
+
+	By default, the lib will create the CONTENT_URI from yours Entity with the follow name:
+```
+CONTENT: "content://";
+
+Authority: described on Authority;
+
+SEPARATOR: '/';
+
+'CONTENT + Authority + SEPARATOR + <your class name>';
+```
+	You can change this sub-writing the method 'getContentUri()' from ProviderHelper.
 	
 	

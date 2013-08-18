@@ -45,6 +45,7 @@ Create a new class that extends 'DplProvider' from this lib.
 Implement the methods to map your database tables and 'MATCHER_URI' from provider and the method that return your application's 'R.class'.
 
 - Authority:
+
   By default, the lib will create the authority for your provider with the follow name: 
       ```
       <your_app_package>.provider

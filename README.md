@@ -29,6 +29,7 @@ For example: if you use the same name and version from tags of 1º step, your sc
 Application1.sql
 ```
 All tables must contains the column '_id' that is required for provider.
+
 This script must be formatted in UTF-8 encoding and must use UNIX format.
 
 At Notepad++ you can put your script with this specifications as bellow:
@@ -72,5 +73,32 @@ You can change this sub-writing the method 'getContentUri()' from ProviderHelper
 ```
 - You can read more about 'Content Providers' here: 
 		http://developer.android.com/guide/topics/providers/content-providers.html
+
+5 - Create your Entities:
+
+	Important: The lib will work with this with created cascade and lazy for queries.
+	
+To do this, create a new class that extends BaseEntity from this lib.
+
+The BaseEntity class has the attribute '_id' required by provider. 
+Within are the default methods to insert, update, delete and query using reflection to read your entity attributes to fill ContentValues or your object attributes.
+
+To create a relationships for your entities, follow the best step:
+- One_To_One: (use @DplObject annotation)
+
+```java
+public class People extends BaseEntity {
+	private String name;
+	
+	@DplObject
+	private User user;
+}
+```
+```java
+public class User extends BaseEntity {
+	private String login;
+	private String password;
+}
+```
 
 

@@ -162,6 +162,8 @@ public class UserRole extends BaseEntity {
 
 6 - Notifying JOINS:
 
+To notify URI's when you use a JOIN, implement the method 'notifyExtraUris(Uri uri)'
+
 This example use the USER_CODE and ROLE_CODE mapped on URI_MATCHER to notify UserRole uri that user or role data has changed.
 	
 And use the following call to get content uri of UserRole.class:
@@ -211,6 +213,6 @@ switch (URI_MATCHER.match(uri)) {
 
 	default:
 		break;
-	}
+}
 ```
 

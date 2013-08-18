@@ -166,7 +166,7 @@ To notify URI's when you use a JOIN, implement the method 'notifyExtraUris(Uri u
 
 This example use the USER_CODE and ROLE_CODE mapped on URI_MATCHER to notify UserRole uri that user or role data has changed.
 	
-And use the following call to get content uri of UserRole.class:
+Use the following call to get content uri of UserRole.class:
 ```java	
 DplProvider.getContentUri(getContext(), UserRole.class)
 ```
@@ -188,7 +188,7 @@ switch (URI_MATCHER.match(uri)) {
 
 7 - Delete relationships:
 
-To delete relationships when you delet the main object, implement the method 'deleteRalationships(Uri uri, String selection, String[] selectionArgs)'
+To delete registers of relationships tables when you delete the main object, implement the method 'deleteRalationships(Uri uri, String selection, String[] selectionArgs)'
 ```java
 ArrayList<Long> idsList = new ArrayList<Long>();
 Cursor cursor;

@@ -57,11 +57,8 @@ Implement the methods to map your database tables and 'MATCHER_URI' from provide
 	By default, the lib will create the CONTENT_URI from yours Entity with the follow name:
 ```
 CONTENT: "content://";
-
 Authority: described on Authority;
-
 SEPARATOR: '/';
-
 'CONTENT + Authority + SEPARATOR + <your class name>';
 ```
 	You can change this sub-writing the method 'getContentUri()' from ProviderHelper.

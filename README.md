@@ -61,7 +61,7 @@ Authority: described on Authority;
 SEPARATOR: '/';
 'CONTENT + Authority + SEPARATOR + <your class name>';
 ```
-You can change this sub-writing the method 'getContentUri()' from ProviderHelper.
+You can change this sub-writing the method 'getContentUri()' from DplpBaseEntity.
 
 4 - Register your provider.
 ```xml

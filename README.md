@@ -25,7 +25,6 @@ For example: if you use the same name and version from tags of 1º step, your sc
     'Application1.sql'
 
 All tables must contains the column '_id' that is required for provider.
-
 This script must be formatted in UTF-8 encoding and must use UNIX format.
 
 At Notepad++ you can put your script with this specifications as bellow:

@@ -17,6 +17,7 @@ Steps
 <meta-data android:name="DB_VERSION" android:value="1"/>
 ```
 2 - Create a script to make your database.
+  
   This script must be in 'raw' folder at 'res' Android's application folder. 
   It must have the follow name: '<DB_NAME><DB_VERSION>.sql'
   

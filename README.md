@@ -22,7 +22,7 @@ This script must be in 'raw' folder at 'res' Android's application folder.
 It must have the follow name: '<DB_NAME><DB_VERSION>.sql'
   
 For example: if you use the same name and version from tags of 1º step, your script file must have the follow name: 
-  'Application1.sql'
+    'Application1.sql'
 
 All tables must contains the column '_id' that is required for provider.
 
@@ -31,3 +31,5 @@ This script must be formatted in UTF-8 encoding and must use UNIX format.
 At Notepad++ you can put your script with this specifications as bellow:
 
     1 - Open your script on notepad++
+    2 - Go to menu Format > convert to UTF-8
+    3 - Go to menu Edit > convert end line > convert to format UNIX 

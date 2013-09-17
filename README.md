@@ -6,7 +6,7 @@ A lib to help you make your Android app persist data on SQLite via ContentProvid
 Developed By
 ============
 
-* Pedro Barosa - <pdrinhobarbosa@gmail.com>
+* Pedro Barbosa - <pdrinhobarbosa@gmail.com>
 
 Steps
 =====

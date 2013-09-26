@@ -42,6 +42,14 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
 	private transient Context context;
 
+	/**
+	 * This lib always need a context to run the methods (save(), delete(), fillObject()...)
+	 * If you use this constructor, call setContext() after call this.
+	 */
+	public DplBaseEntity() {
+
+	}
+
 	public DplBaseEntity(Context context) {
 		this.context = context;
 	}
@@ -159,10 +167,10 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		return save(uri, values, null, null);
 	}
 
-	public boolean save(Uri uri, boolean saveNullValues) {
+	public boolean save(boolean saveNullValues) {
 		ContentFiller contentFiller = getContentFiller(this.getClass(), saveNullValues);
 
-		return verifySuperClassTablesAndSave(uri, contentFiller, saveNullValues);
+		return verifySuperClassTablesAndSave(getContentUri(), contentFiller, saveNullValues);
 	}
 
 	/**
@@ -198,18 +206,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * @return
 	 */
 	public boolean save() {
-		return save(getContentUri(), true);
-	}
-
-	/**
-	 * Use this method if you need to save only loaded attributes on object.
-	 * If you want to save all the attributes of the object, even if they have the value null, use
-	 * the save() method
-	 * 
-	 * @return A boolean if was success or not the operation.
-	 */
-	public boolean saveLoadedAttributesOnly() {
-		return save(getContentUri(), false);
+		return save(true);
 	}
 
 	public boolean save(Uri uri, ContentValues values, String selection, String[] selectionArgs) throws IllegalArgumentException {

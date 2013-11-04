@@ -61,6 +61,11 @@ public abstract class DplProvider extends ContentProvider {
 	public static final String SELECTION_IS_NULL = " IS NULL";
 
 	/**
+	 * @return " IS NOT NULL"
+	 */
+	public static final String SELECTION_IS_NOT_NULL = " IS NOT NULL";
+
+	/**
 	 * @return " IN(?)"
 	 */
 	public static final String SELECTION_IN = " IN(?)";

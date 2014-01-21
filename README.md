@@ -13,7 +13,7 @@ Steps
 
 1 - Put the follow tags at AndroidManifest.xml application tag:
 ```xml
-<meta-data android:name="DB_NAME" android:value="Application"/>
+<meta-data android:name="DB_NAME" android:value="application"/>
 <meta-data android:name="DB_VERSION" android:value="1"/>
 ```
 2 - Create a script to make your database.
@@ -26,7 +26,7 @@ It must have the follow name:
 
 For example: if you use the same name and version from tags of 1º step, your script file must have the follow name: 
 ```
-Application1.sql
+application1.sql
 ```
 All tables must contains the column '_id' that is required for provider.
 

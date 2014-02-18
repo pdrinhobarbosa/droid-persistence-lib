@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.dpl.DplProvider;
+import org.dpl.annotation.DplColumn;
 import org.dpl.annotation.DplEnumList;
 import org.dpl.annotation.DplIgnore;
 import org.dpl.annotation.DplList;
@@ -21,6 +22,7 @@ import org.dpl.database.DBHelper;
 import org.dpl.interfaces.EnumInterface;
 import org.dpl.util.EnumUtils;
 
+import android.annotation.SuppressLint;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
@@ -112,7 +114,15 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 				contentFiller.getValues().put(_ID, get_id());
 			}
 
-			returnFlag = save(uri, contentFiller.getValues());
+			/**
+			 * Save if have some field to save in this table.
+			 * This is used when have more than one table on this object (hierarchical tables).
+			 * So if don't have any field in this ContentValue, maybe it was called to save some
+			 * field in other table.
+			 */
+			if (contentFiller.getValues().size() > 0) {
+				returnFlag = save(uri, contentFiller.getValues());
+			}
 
 			if (returnFlag && isNewRegister && (contentFiller.getLists() != null) && !contentFiller.getLists().isEmpty()) {
 				for (Field field : contentFiller.getLists()) {
@@ -144,16 +154,12 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 							}
 						}
 					} catch (IllegalArgumentException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (IllegalAccessException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (InvocationTargetException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (NoSuchMethodException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -389,21 +395,16 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
 							entities.add(entity);
 						} catch (InstantiationException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						} catch (IllegalAccessException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						} catch (IllegalArgumentException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						} catch (InvocationTargetException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					} while (cursor.moveToNext());
 				} catch (NoSuchMethodException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -421,15 +422,19 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	}
 
 	public static int count(Context context, Class<?> cls, String selection, String[] selectionArgs) {
-		return count(context, DplProvider.getContentUri(context, cls), selection, selectionArgs);
+		return count(context, DplProvider.getContentUri(context, cls), new String[] {"count(*) AS count"}, selection, selectionArgs);
 	}
 
 	public static int count(Context context, Uri uri, String selection, String[] selectionArgs) {
+		return count(context, uri, new String[] {"count(*) AS count"}, selection, selectionArgs);
+	}
+
+	public static int count(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs) {
 		int count = 0;
 
 		Cursor countCursor = null;
 		try {
-			countCursor = context.getContentResolver().query(uri, new String[] {"count(*) AS count"}, selection, selectionArgs, null);
+			countCursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
 
 			countCursor.moveToFirst();
 			count = countCursor.getInt(0);
@@ -515,6 +520,9 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		Class<?> superClass = cls.getSuperclass();
 		while (!superClass.equals(Object.class)) {
 			if (superClass.isAnnotationPresent(DplTable.class)) {
+				/**
+				 * Add DplBaseEntity Declared Fields to get _id on fields for this child table.
+				 */
 				fieldsArray.addAll(Arrays.asList(DplBaseEntity.class.getDeclaredFields()));
 
 				contentFiller.setSuperClass(superClass);
@@ -535,11 +543,19 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	public ContentFiller fillContentFiller(Field[] fields, ContentFiller contentFiller, boolean saveNullValues) {
 
 		for (Integer i = 0; i < fields.length; i++) {
-
-			String fieldName = fields[i].getName();
-
 			if (Modifier.isStatic(fields[i].getModifiers()) || fields[i].isAnnotationPresent(DplIgnore.class)) {
 				continue;
+			}
+
+			String fieldName = fields[i].getName();
+			String columnName = fieldName;
+
+			if (fields[i].isAnnotationPresent(DplColumn.class)) {
+				DplColumn dplColumn = fields[i].getAnnotation(DplColumn.class);
+				String dplColumnName = dplColumn.name();
+				if ((dplColumnName != null) && (dplColumnName.length() > 0)) {
+					columnName = dplColumnName;
+				}
 			}
 
 			if (fields[i].isAnnotationPresent(DplObject.class)) {
@@ -553,12 +569,12 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 						DplBaseEntity<?> ent = (DplBaseEntity<?>) objetoInterno;
 
 						if (saveFlag) {
-							ent.save();
+							ent.save(saveNullValues);
 						}
 
 						Long idDoObjeto = ent.get_id();
 						if ((idDoObjeto != null) && (idDoObjeto != -1)) {
-							contentFiller.getValues().put(fieldName, idDoObjeto);
+							contentFiller.getValues().put(columnName, idDoObjeto);
 						}
 					}
 				} catch (Exception e) {
@@ -576,68 +592,68 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 						String value = (String) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
 
 						if ((value != null) || saveNullValues) {
-							contentFiller.getValues().put(fieldName, value);
+							contentFiller.getValues().put(columnName, value);
 						}
 					} else if ((fields[i].getType() == Integer.class) || fields[i].getType().getName().equalsIgnoreCase("int")) {
 						Integer value = (Integer) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
 
 						if ((value != null) || saveNullValues) {
-							contentFiller.getValues().put(fieldName, value);
+							contentFiller.getValues().put(columnName, value);
 						}
 					} else if ((fields[i].getType() == Double.class) || fields[i].getType().getName().equalsIgnoreCase("double")) {
 						Double value = (Double) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
 
 						if ((value != null) || saveNullValues) {
-							contentFiller.getValues().put(fieldName, value);
+							contentFiller.getValues().put(columnName, value);
 						}
 					} else if ((fields[i].getType() == Float.class) || fields[i].getType().getName().equalsIgnoreCase("float")) {
 						Float value = (Float) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
 
 						if ((value != null) || saveNullValues) {
-							contentFiller.getValues().put(fieldName, value);
+							contentFiller.getValues().put(columnName, value);
 						}
 					} else if ((fields[i].getType() == Long.class) || fields[i].getType().getName().equalsIgnoreCase("long")) {
 						Long value = (Long) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
 
 						if ((value != null) || saveNullValues) {
-							contentFiller.getValues().put(fieldName, value);
+							contentFiller.getValues().put(columnName, value);
 						}
 					} else if ((fields[i].getType() == Boolean.class) || fields[i].getType().getName().equalsIgnoreCase("boolean")) {
 						Boolean value = (Boolean) this.getClass().getMethod(getGetter(fieldName, true)).invoke(this);
 
 						if ((value != null) || saveNullValues) {
-							contentFiller.getValues().put(fieldName, value);
+							contentFiller.getValues().put(columnName, value);
 						}
 					} else if (fields[i].getType() == Date.class) {
 						Date date = (Date) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
 
 						if (date != null) {
-							contentFiller.getValues().put(fieldName, date.getTime());
+							contentFiller.getValues().put(columnName, date.getTime());
 						} else if (saveNullValues) {
 							String value = null;
-							contentFiller.getValues().put(fieldName, value);
+							contentFiller.getValues().put(columnName, value);
 						}
 					} else if (fields[i].getType() == Calendar.class) {
 						Calendar calendar = (Calendar) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
 
 						if (calendar != null) {
-							contentFiller.getValues().put(fieldName, calendar.getTimeInMillis());
+							contentFiller.getValues().put(columnName, calendar.getTimeInMillis());
 						} else if (saveNullValues) {
 							String values = null;
-							contentFiller.getValues().put(fieldName, values);
+							contentFiller.getValues().put(columnName, values);
 						}
 
 					} else if ((fields[i].getType() == Byte.class) || fields[i].getType().getName().equalsIgnoreCase("byte")) {
 						Byte value = (Byte) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
 
 						if ((value != null) || saveNullValues) {
-							contentFiller.getValues().put(fieldName, value);
+							contentFiller.getValues().put(columnName, value);
 						}
 					} else if (fields[i].getType().isArray() && fields[i].getType().getCanonicalName().equalsIgnoreCase("byte[]")) {
 						byte[] value = (byte[]) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
 
 						if ((value != null) || saveNullValues) {
-							contentFiller.getValues().put(fieldName, value);
+							contentFiller.getValues().put(columnName, value);
 						}
 					} else if (fields[i].getType().isEnum()) {
 						Enum<?> enumObject = ((Enum<?>) this.getClass().getMethod(getGetter(fieldName)).invoke(this));
@@ -648,13 +664,13 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
 								Integer enumId = (enumInterface != null) ? enumInterface.getId() : null;
 
-								contentFiller.getValues().put(fieldName, enumId);
+								contentFiller.getValues().put(columnName, enumId);
 							} else {
-								contentFiller.getValues().put(fieldName, enumObject.toString());
+								contentFiller.getValues().put(columnName, enumObject.toString());
 							}
 						} else if (saveNullValues) {
 							String values = null;
-							contentFiller.getValues().put(fieldName, values);
+							contentFiller.getValues().put(columnName, values);
 						}
 					}
 				} catch (Exception e) {
@@ -666,8 +682,12 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		return contentFiller;
 	}
 
-	@SuppressWarnings("rawtypes")
 	public void fillObject(Cursor cursor) {
+		fillObject(cursor, true);
+	}
+
+	@SuppressWarnings("rawtypes")
+	public void fillObject(Cursor cursor, boolean withJoins) {
 		if ((this == null) || (cursor == null)) {
 			return;
 		}
@@ -687,15 +707,24 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		fields = fieldsArray.toArray(new Field[fieldsArray.size()]);
 
 		for (Integer i = 0; i < fields.length; i++) {
-			String fieldName = fields[i].getName();
-
 			if (Modifier.isStatic(fields[i].getModifiers()) || fields[i].isAnnotationPresent(DplIgnore.class)) {
 				continue;
 			}
 
+			String fieldName = fields[i].getName();
+			String columnName = fieldName;
+
+			if (fields[i].isAnnotationPresent(DplColumn.class)) {
+				DplColumn dplColumn = fields[i].getAnnotation(DplColumn.class);
+				String dplColumnName = dplColumn.name();
+				if ((dplColumnName != null) && (dplColumnName.length() > 0)) {
+					columnName = dplColumnName;
+				}
+			}
+
 			try {
 				if (fields[i].isAnnotationPresent(DplObject.class)) {
-					Long id = cursor.getLong(cursor.getColumnIndex(fieldName));
+					Long id = cursor.getLong(cursor.getColumnIndex(columnName));
 
 					DplBaseEntity entity = null;
 					if ((id != null) && (id != 0)) {
@@ -709,40 +738,55 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 					getClass().getMethod(getSetter(fieldName), fields[i].getType()).invoke(this, entity);
 
 				} else if ((fields[i].getType() == String.class) || fields[i].getType().getName().equalsIgnoreCase("string")) {
-					String value = cursor.getString(cursor.getColumnIndex(fieldName));
+					String value = cursor.getString(cursor.getColumnIndex(columnName));
 
 					getClass().getMethod(getSetter(fieldName), String.class).invoke(this, value);
 
 				} else if ((fields[i].getType() == Integer.class) || fields[i].getType().getName().equalsIgnoreCase("int")) {
-					Integer value = cursor.getInt(cursor.getColumnIndex(fieldName));
+					Integer value = null;
+					if (!cursor.isNull(cursor.getColumnIndex(columnName))) {
+						value = cursor.getInt(cursor.getColumnIndex(columnName));
+					}
 
 					getClass().getMethod(getSetter(fieldName), Integer.class).invoke(this, value);
 				} else if ((fields[i].getType() == Double.class) || fields[i].getType().getName().equalsIgnoreCase("double")) {
-					Double value = cursor.getDouble(cursor.getColumnIndex(fieldName));
+					Double value = null;
+					if (!cursor.isNull(cursor.getColumnIndex(columnName))) {
+						value = cursor.getDouble(cursor.getColumnIndex(columnName));
+					}
 
 					getClass().getMethod(getSetter(fieldName), Double.class).invoke(this, value);
 				} else if ((fields[i].getType() == Float.class) || fields[i].getType().getName().equalsIgnoreCase("float")) {
-					Float value = cursor.getFloat(cursor.getColumnIndex(fieldName));
+					Float value = null;
+					if (!cursor.isNull(cursor.getColumnIndex(columnName))) {
+						value = cursor.getFloat(cursor.getColumnIndex(columnName));
+					}
 
 					getClass().getMethod(getSetter(fieldName), Float.class).invoke(this, value);
 				} else if ((fields[i].getType() == Long.class) || fields[i].getType().getName().equalsIgnoreCase("long")) {
-					Long value = cursor.getLong(cursor.getColumnIndex(fieldName));
+					Long value = null;
+					if (!cursor.isNull(cursor.getColumnIndex(columnName))) {
+						value = cursor.getLong(cursor.getColumnIndex(columnName));
+					}
 
 					getClass().getMethod(getSetter(fieldName), Long.class).invoke(this, value);
 				} else if ((fields[i].getType() == Boolean.class) || fields[i].getType().getName().equalsIgnoreCase("boolean")) {
-					Boolean value = (cursor.getInt(cursor.getColumnIndex(fieldName)) > 0);
+					Boolean value = null;
+					if (!cursor.isNull(cursor.getColumnIndex(columnName))) {
+						value = (cursor.getInt(cursor.getColumnIndex(columnName)) > 0);
+					}
 
 					getClass().getMethod(getSetter(fieldName), Boolean.class).invoke(this, value);
 				} else if ((fields[i].getType() == Byte.class) || fields[i].getType().getName().equalsIgnoreCase("byte")) {
-					byte value = (byte) cursor.getInt(cursor.getColumnIndex(fieldName));
+					byte value = (byte) cursor.getInt(cursor.getColumnIndex(columnName));
 
 					getClass().getMethod(getSetter(fieldName), Byte.class).invoke(this, value);
 				} else if (fields[i].getType().isArray() && fields[i].getType().getCanonicalName().equalsIgnoreCase("byte[]")) {
-					byte[] value = cursor.getBlob(cursor.getColumnIndex(fieldName));
+					byte[] value = cursor.getBlob(cursor.getColumnIndex(columnName));
 
 					getClass().getMethod(getSetter(fieldName), byte[].class).invoke(this, value);
 				} else if (fields[i].getType() == Date.class) {
-					Long long_date = cursor.getLong(cursor.getColumnIndex(fieldName));
+					Long long_date = cursor.getLong(cursor.getColumnIndex(columnName));
 
 					if ((long_date != null) && (long_date > 0)) {
 						Calendar c = Calendar.getInstance();
@@ -752,7 +796,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 						getClass().getMethod(getSetter(fieldName), Date.class).invoke(this, long_date);
 					}
 				} else if (fields[i].getType() == Calendar.class) {
-					Long long_date = cursor.getLong(cursor.getColumnIndex(fieldName));
+					Long long_date = cursor.getLong(cursor.getColumnIndex(columnName));
 
 					if ((long_date != null) && (long_date > 0)) {
 						Calendar calendar = Calendar.getInstance();
@@ -764,7 +808,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
 				} else if (fields[i].getType().isEnum()) {
 
-					Integer value = cursor.getInt(cursor.getColumnIndex(fieldName));
+					Integer value = cursor.getInt(cursor.getColumnIndex(columnName));
 					Enum[] enumConstants = (Enum[]) fields[i].getType().getEnumConstants();
 					EnumInterface enumInt = EnumUtils.getById(value, (EnumInterface[]) enumConstants);
 
@@ -777,6 +821,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		}
 	}
 
+	@SuppressLint("DefaultLocale")
 	private static String getSetter(String fieldName) {
 		return "set" + fieldName.replaceFirst("" + fieldName.charAt(0), ("" + fieldName.charAt(0)).toUpperCase());
 	}
@@ -785,6 +830,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		return getGetter(fieldName, false);
 	}
 
+	@SuppressLint("DefaultLocale")
 	private static String getGetter(String fieldName, boolean booleanField) {
 
 		if (booleanField) {
@@ -800,4 +846,39 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	public String toString() {
 		return getClass().getSimpleName() + " id: " + get_id();
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = (prime * result) + ((_id == null) ? 0 : _id.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+
+		if (obj == null) {
+			return false;
+		}
+
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+
+		DplBaseEntity<?> other = (DplBaseEntity<?>) obj;
+		if (_id == null) {
+			if (other._id != null) {
+				return false;
+			}
+		} else if (!_id.equals(other._id)) {
+			return false;
+		}
+
+		return true;
+	}
+
 }

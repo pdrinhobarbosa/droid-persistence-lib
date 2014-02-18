@@ -83,7 +83,11 @@ To do this, create a new class that extends BaseEntity from this lib.
 The BaseEntity class has the attribute '_id' required by provider. 
 Within are the default methods to insert, update, delete and query using reflection to read your entity attributes to fill ContentValues or your object attributes.
 
-To map an attribute to other column name on SQLite, use the annotation @DplColumn(name = '<column_name>').
+To map an attribute to other column name on SQLite, use the annotation:
+
+```java
+@DplColumn(name = '<column_name>')
+```
 
 To create a relationships for your entities, follow the best step:
 - One_To_One: (use @DplObject annotation)
@@ -134,7 +138,7 @@ public class Phone extends BaseEntity {
 ```
 - Many_To_Many:
 	 
-	This example will use a relationship table.
+	This example will use a relationship table 'UserRole'.
 
 ```java
 public class User extends BaseEntity {

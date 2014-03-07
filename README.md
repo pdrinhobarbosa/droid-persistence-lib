@@ -1,7 +1,7 @@
 droid-persistence-lib
 =====================
 
-A lib to help you make your Android app persist data on SQLite via ContentProvider
+A open source library to help your Android app persist data on SQLite using ContentProvider
 
 Developed By
 ============

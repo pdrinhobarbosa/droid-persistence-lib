@@ -26,9 +26,7 @@ public class TesteProvider extends DplProvider {
 	}
 
 	@Override
-	public void notifyExtraUris(Uri uri) {
-
-	}
+	public void notifyExtraUris(Uri uri) {}
 
 	@Override
 	public Class<?> getRClass() {
@@ -36,7 +34,8 @@ public class TesteProvider extends DplProvider {
 	}
 
 	@Override
-	public void deleteRalationships(Uri uri, String selection, String[] selectionArgs) {
+	public void deleteRalationships(Uri uri, String selection, String[] selectionArgs) {}
 
-	}
+	@Override
+	protected void registerContentObeservers() {}
 }

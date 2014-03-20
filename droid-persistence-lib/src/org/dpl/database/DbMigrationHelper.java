@@ -18,8 +18,8 @@ public class DbMigrationHelper {
 
 	private static final String TAG = DbMigrationHelper.class.getSimpleName();
 
-	private Context context;
-	private Class<?> mR;
+	private final Context context;
+	private final Class<?> mR;
 
 	public DbMigrationHelper(Context context, Class<?> r) {
 		this.context = context;
@@ -27,22 +27,19 @@ public class DbMigrationHelper {
 	}
 
 	/**
-	 * Utilizado quando o banco de dados é <b>criado</b> (na primeira execução do aplicativo). Este
-	 * método lê todos os scripts do banco "databaseName", desde a versao 1, até
-	 * <code>currentVersion</code>.
+	 * Used when the database is <b>created</b> (on application first execution)
+	 * This method read all scripts of database from the first version until
+	 * <code>currentVersion</code>
 	 * 
 	 * @param db
 	 * 
 	 * @param currentVersion
 	 * 
 	 * @param databaseName
-	 *            Esse atributo deve seguir o seguinte padrão(exemplo):<br>
-	 *            -> bancodedados%version%<br>
-	 *            -> ge_database%version%<br>
-	 *            -> %version%_superbanco<br>
-	 *            -> banco%version%damxt_mxt<br>
+	 *            This attribute should follow the following pattern<br>
+	 *            -> <databaseName>%version%<br>
 	 * 
-	 *            A substring %version% será substituída pela versão do banco (de 1 a
+	 *            The substring %version% will be replaced for the database version (1 to
 	 *            currentVersion).
 	 * 
 	 * @see SQLiteOpenHelper#onCreate(SQLiteDatabase)
@@ -53,9 +50,9 @@ public class DbMigrationHelper {
 	}
 
 	/**
-	 * Utilizado quando o banco de dados é <b>atualizado</b> (na primeira execução do aplicativo).
-	 * Este método lê os scripts do banco "databaseName", desde a versao
-	 * <code>(oldVersion + 1)</code>, até <code>currentVersion</code>.
+	 * Used when the database is <b>updated</b> (on application first execution)
+	 * This method read all scripts of database from the <code>(oldVersion + 1)</code> until
+	 * <code>currentVersion</code>
 	 * 
 	 * @param db
 	 * 
@@ -64,13 +61,10 @@ public class DbMigrationHelper {
 	 * @param newVersion
 	 * 
 	 * @param databaseName
-	 *            Esse atributo deve seguir o seguinte padrão(exemplo):<br>
-	 *            -> bancodedados%version%<br>
-	 *            -> ge_database%version%<br>
-	 *            -> %version%_superbanco<br>
-	 *            -> banco%version%damxt_mxt<br>
+	 *            This attribute should follow the following pattern:<br>
+	 *            -> <databaseName>%version%<br>
 	 * 
-	 *            A substring %version% será substituída pela versão do banco (de 1 a
+	 *            The substring %version% will be replaced for the database version (1 to
 	 *            currentVersion).
 	 * 
 	 * @see SQLiteOpenHelper#onCreate(SQLiteDatabase)

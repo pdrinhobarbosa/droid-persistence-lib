@@ -86,6 +86,11 @@ public abstract class DplProvider extends ContentProvider {
 	public abstract void fillUriMatcher();
 
 	/**
+	 * Register the observers to your tables that will be sent to server
+	 */
+	protected abstract void registerContentObeservers();
+
+	/**
 	 * Get Table name
 	 * 
 	 * @param uri
@@ -119,8 +124,12 @@ public abstract class DplProvider extends ContentProvider {
 	public boolean onCreate() {
 		mSQLiteHelper = new DBHelper(getContext(), getRClass());
 		fillUriMatcher();
-
+		registerContentObeservers();
 		return true;
+	}
+
+	public int match(Uri uri) {
+		return URI_MATCHER.match(uri);
 	}
 
 	/**
@@ -277,8 +286,7 @@ public abstract class DplProvider extends ContentProvider {
 		Integer id = null;
 		try {
 			id = Integer.valueOf(uri.getLastPathSegment());
-		} catch (NumberFormatException nfe) {
-		}
+		} catch (NumberFormatException nfe) {}
 
 		if (id != null) {
 			selection = ((selection != null) ? selection + " AND " : "") + DplBaseEntity._ID + " = " + id;

@@ -63,6 +63,8 @@ public abstract class DplSyncAdapter extends AbstractThreadedSyncAdapter {
 		if (isServerComminication()) {
 			sendStartSyncReceiver();
 
+			ThreadPool pool = ThreadPool.getInstance();
+
 			String uriString = extras.getString(Uri.class.getSimpleName());
 
 			int actionsLength = extras.getInt(SYNC_ACTIONS_LENGTH, 0);
@@ -75,11 +77,22 @@ public abstract class DplSyncAdapter extends AbstractThreadedSyncAdapter {
 				Uri uri = Uri.parse(uriString);
 				DplProvider dplProvider = (DplProvider) provider.getLocalContentProvider();
 
-				runAction(mSyncs.get(dplProvider.match(uri)), actions);
+				DplBaseSyncService syncServer = mSyncs.get(dplProvider.match(uri));
+				if (syncServer != null) {
+					runAction(syncServer, actions);
+				}
 			} else {
 				downloadAll();
 				uploadAll();
 			}
+
+			pool.run();
+
+			Log.d(getClass().getSimpleName(), "****************************************************************");
+			Log.d(getClass().getSimpleName(), "ThreadPool isShutdown: " + pool.getExecutorService().isShutdown());
+			Log.d(getClass().getSimpleName(), "****************************************************************");
+
+			ThreadPool.setInstance(null);
 
 			sendFinishSyncReceiver();
 
@@ -113,10 +126,7 @@ public abstract class DplSyncAdapter extends AbstractThreadedSyncAdapter {
 			} else if (action == SyncAction.DOWNLOAD.getId()) {
 				syncService.download();
 			} else if (action == SyncAction.CLEAN.getId()) {
-				/**
-				 * TODO - tirar obj do clean, ele deve rodar independente
-				 */
-
+				syncService.cleanDatabase();
 			}
 		}
 	}

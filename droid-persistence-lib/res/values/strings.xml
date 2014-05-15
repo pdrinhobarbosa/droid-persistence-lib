@@ -1,4 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">android.provider.lib</string>
+
+    <string name="app_name" translatable="false">android.provider.lib</string>
     <string name="uri_not_found">URI not found error!</string>
+
 </resources>

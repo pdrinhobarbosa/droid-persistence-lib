@@ -1,0 +1,33 @@
+﻿# Mac OSx
+.*.swp
+._*
+.DS_Store
+
+# Code versioner
+.hg
+.lock-wscript
+.svn
+.wafpickle-*
+CVS
+
+# Android generated
+bin
+gen
+
+# Eclipse
+.project
+.classpath
+.settings
+
+#IntelliJ IDEA
+.idea
+*.iml
+*.ipr
+*.iws
+classes
+gen-external-apklibs
+
+#Maven
+target
+release.properties
+pom.xml.*

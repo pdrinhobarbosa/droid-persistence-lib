@@ -89,6 +89,14 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		return Uri.parse(getContentUriBase() + getClass().getSimpleName());
 	}
 
+	public ContentValues toContentValues() {
+		return getContentFiller(getClass(), true).getValues();
+	}
+
+	public ContentValues toContentValues(boolean withNullValues) {
+		return getContentFiller(getClass(), withNullValues).getValues();
+	}
+
 	public String getContentUriBase() {
 		return DplProvider.CONTENT + DplProvider.getAuthority(context) + DplProvider.SEPARATOR;
 	}
@@ -183,7 +191,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * Save only the values ​​reported by ContentValues​​.
 	 * If you need to save values in more than one table, for hierarchical tables for example,
 	 * use saveLoadedAttributesOnly() method to don't save values not loaded on object.
-	 * 
+	 *
 	 * @param values
 	 * @return A boolean if was success or not the operation.
 	 */
@@ -195,7 +203,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * Save only the values ​​reported by ContentValues and use where clause​​.
 	 * If you need to save values in more than one table, for hierarchical tables for example,
 	 * use saveLoadedAttributesOnly() method to don't save values not loaded on object.
-	 * 
+	 *
 	 * @param values
 	 * @param selection
 	 * @param selectionArgs
@@ -208,7 +216,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	/**
 	 * Save all attributes of this object.
 	 * If you need to save only some attributes, use saveLoadedAttributesOnly() method.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean save() {
@@ -258,7 +266,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
 	/**
 	 * Used for save the relationship from main object and the enum of list
-	 * 
+	 *
 	 * @param table
 	 *            The table name from relationship entity mapped on provider
 	 * @param objColumn
@@ -293,7 +301,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
 	/**
 	 * used for delete all relationships registers of enum relationship table by objId
-	 * 
+	 *
 	 * @param target
 	 *            The class from relationship entity mapped on provider
 	 * @param mainObjColumn
@@ -314,7 +322,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
 	/**
 	 * Delete all register to this table
-	 * 
+	 *
 	 * @return The number of rows deleted.
 	 */
 	public int deleteAll() {
@@ -323,7 +331,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
 	/**
 	 * Delete this register to database
-	 * 
+	 *
 	 * @return The number of rows deleted.
 	 */
 	public int delete() {
@@ -332,7 +340,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
 	/**
 	 * Delete from this table with a condition.
-	 * 
+	 *
 	 * @param where
 	 * @param selectionArgs
 	 * @return The number of rows deleted.
@@ -364,7 +372,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
 	/**
 	 * List all
-	 * 
+	 *
 	 * @return ArrayList with all registers on this table
 	 */
 	public ArrayList<T> query() {

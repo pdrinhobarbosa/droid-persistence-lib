@@ -187,7 +187,7 @@ public abstract class DplProvider extends ContentProvider {
 			int count = mSQLiteHelper.getWritableDatabase().delete(table, selection, selectionArgs);
 
 			if (count > 0) {
-				Log.i(DBHelper.CATEGORY, count + " rows changed!");
+				Log.i(DBHelper.CATEGORY, String.format("%d rows of %s deleted!", count, table));
 
 				getContext().getContentResolver().notifyChange(uri, null);
 				notifyExtraUris(uri);
@@ -274,7 +274,7 @@ public abstract class DplProvider extends ContentProvider {
 
 		int updatedRows = mSQLiteHelper.getWritableDatabase().update(table, values, selection, selectionArgs);
 
-		Log.i(DBHelper.CATEGORY, updatedRows + " rows changed!");
+		Log.i(DBHelper.CATEGORY, String.format("%d rows of %s updated!", updatedRows, table));
 
 		getContext().getContentResolver().notifyChange(uri, null);
 		notifyExtraUris(uri);

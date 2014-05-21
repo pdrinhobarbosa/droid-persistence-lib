@@ -722,101 +722,104 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 				}
 			}
 
-			try {
-				if (fields[i].isAnnotationPresent(DplObject.class)) {
-					Long id = cursor.getLong(cursor.getColumnIndex(columnName));
-
-					DplBaseEntity entity = null;
-					if ((id != null) && (id != 0)) {
-						@SuppressWarnings("unchecked")
-						final Constructor<? extends DplBaseEntity<?>> ec = (Constructor<DplBaseEntity<?>>) fields[i].getType().getConstructor(new Class[] {Context.class});
-
-						entity = ec.newInstance(context);
-						entity.set_id(id);
+			int columnIndex = cursor.getColumnIndex(columnName);
+			if (columnIndex > -1) {
+				try {
+					if (fields[i].isAnnotationPresent(DplObject.class)) {
+						Long id = cursor.getLong(columnIndex);
+						
+						DplBaseEntity entity = null;
+						if ((id != null) && (id != 0)) {
+							@SuppressWarnings("unchecked")
+							final Constructor<? extends DplBaseEntity<?>> ec = (Constructor<DplBaseEntity<?>>) fields[i].getType().getConstructor(new Class[] {Context.class});
+							
+							entity = ec.newInstance(context);
+							entity.set_id(id);
+						}
+						
+						getClass().getMethod(getSetter(fieldName), fields[i].getType()).invoke(this, entity);
+						
+					} else if ((fields[i].getType() == String.class) || fields[i].getType().getName().equalsIgnoreCase("string")) {
+						String value = cursor.getString(columnIndex);
+						
+						getClass().getMethod(getSetter(fieldName), String.class).invoke(this, value);
+						
+					} else if ((fields[i].getType() == Integer.class) || fields[i].getType().getName().equalsIgnoreCase("int")) {
+						Integer value = null;
+						if (!cursor.isNull(columnIndex)) {
+							value = cursor.getInt(columnIndex);
+						}
+						
+						getClass().getMethod(getSetter(fieldName), Integer.class).invoke(this, value);
+					} else if ((fields[i].getType() == Double.class) || fields[i].getType().getName().equalsIgnoreCase("double")) {
+						Double value = null;
+						if (!cursor.isNull(columnIndex)) {
+							value = cursor.getDouble(columnIndex);
+						}
+						
+						getClass().getMethod(getSetter(fieldName), Double.class).invoke(this, value);
+					} else if ((fields[i].getType() == Float.class) || fields[i].getType().getName().equalsIgnoreCase("float")) {
+						Float value = null;
+						if (!cursor.isNull(columnIndex)) {
+							value = cursor.getFloat(columnIndex);
+						}
+						
+						getClass().getMethod(getSetter(fieldName), Float.class).invoke(this, value);
+					} else if ((fields[i].getType() == Long.class) || fields[i].getType().getName().equalsIgnoreCase("long")) {
+						Long value = null;
+						if (!cursor.isNull(columnIndex)) {
+							value = cursor.getLong(columnIndex);
+						}
+						
+						getClass().getMethod(getSetter(fieldName), Long.class).invoke(this, value);
+					} else if ((fields[i].getType() == Boolean.class) || fields[i].getType().getName().equalsIgnoreCase("boolean")) {
+						Boolean value = null;
+						if (!cursor.isNull(columnIndex)) {
+							value = (cursor.getInt(columnIndex) > 0);
+						}
+						
+						getClass().getMethod(getSetter(fieldName), Boolean.class).invoke(this, value);
+					} else if ((fields[i].getType() == Byte.class) || fields[i].getType().getName().equalsIgnoreCase("byte")) {
+						byte value = (byte) cursor.getInt(columnIndex);
+						
+						getClass().getMethod(getSetter(fieldName), Byte.class).invoke(this, value);
+					} else if (fields[i].getType().isArray() && fields[i].getType().getCanonicalName().equalsIgnoreCase("byte[]")) {
+						byte[] value = cursor.getBlob(columnIndex);
+						
+						getClass().getMethod(getSetter(fieldName), byte[].class).invoke(this, value);
+					} else if (fields[i].getType() == Date.class) {
+						Long long_date = cursor.getLong(columnIndex);
+						
+						if ((long_date != null) && (long_date > 0)) {
+							Calendar c = Calendar.getInstance();
+							c.setTimeInMillis(long_date);
+							getClass().getMethod(getSetter(fieldName), Date.class).invoke(this, c.getTime());
+						} else {
+							getClass().getMethod(getSetter(fieldName), Date.class).invoke(this, long_date);
+						}
+					} else if (fields[i].getType() == Calendar.class) {
+						Long long_date = cursor.getLong(columnIndex);
+						
+						if ((long_date != null) && (long_date > 0)) {
+							Calendar calendar = Calendar.getInstance();
+							calendar.setTimeInMillis(long_date);
+							getClass().getMethod(getSetter(fieldName), Calendar.class).invoke(this, calendar);
+						} else {
+							getClass().getMethod(getSetter(fieldName), Calendar.class).invoke(this, long_date);
+						}
+						
+					} else if (fields[i].getType().isEnum()) {
+						
+						Integer value = cursor.getInt(columnIndex);
+						Enum[] enumConstants = (Enum[]) fields[i].getType().getEnumConstants();
+						EnumInterface enumInt = EnumUtils.getById(value, (EnumInterface[]) enumConstants);
+						
+						getClass().getMethod(getSetter(fieldName), enumInt.getClass()).invoke(this, enumInt);
+						
 					}
-
-					getClass().getMethod(getSetter(fieldName), fields[i].getType()).invoke(this, entity);
-
-				} else if ((fields[i].getType() == String.class) || fields[i].getType().getName().equalsIgnoreCase("string")) {
-					String value = cursor.getString(cursor.getColumnIndex(columnName));
-
-					getClass().getMethod(getSetter(fieldName), String.class).invoke(this, value);
-
-				} else if ((fields[i].getType() == Integer.class) || fields[i].getType().getName().equalsIgnoreCase("int")) {
-					Integer value = null;
-					if (!cursor.isNull(cursor.getColumnIndex(columnName))) {
-						value = cursor.getInt(cursor.getColumnIndex(columnName));
-					}
-
-					getClass().getMethod(getSetter(fieldName), Integer.class).invoke(this, value);
-				} else if ((fields[i].getType() == Double.class) || fields[i].getType().getName().equalsIgnoreCase("double")) {
-					Double value = null;
-					if (!cursor.isNull(cursor.getColumnIndex(columnName))) {
-						value = cursor.getDouble(cursor.getColumnIndex(columnName));
-					}
-
-					getClass().getMethod(getSetter(fieldName), Double.class).invoke(this, value);
-				} else if ((fields[i].getType() == Float.class) || fields[i].getType().getName().equalsIgnoreCase("float")) {
-					Float value = null;
-					if (!cursor.isNull(cursor.getColumnIndex(columnName))) {
-						value = cursor.getFloat(cursor.getColumnIndex(columnName));
-					}
-
-					getClass().getMethod(getSetter(fieldName), Float.class).invoke(this, value);
-				} else if ((fields[i].getType() == Long.class) || fields[i].getType().getName().equalsIgnoreCase("long")) {
-					Long value = null;
-					if (!cursor.isNull(cursor.getColumnIndex(columnName))) {
-						value = cursor.getLong(cursor.getColumnIndex(columnName));
-					}
-
-					getClass().getMethod(getSetter(fieldName), Long.class).invoke(this, value);
-				} else if ((fields[i].getType() == Boolean.class) || fields[i].getType().getName().equalsIgnoreCase("boolean")) {
-					Boolean value = null;
-					if (!cursor.isNull(cursor.getColumnIndex(columnName))) {
-						value = (cursor.getInt(cursor.getColumnIndex(columnName)) > 0);
-					}
-
-					getClass().getMethod(getSetter(fieldName), Boolean.class).invoke(this, value);
-				} else if ((fields[i].getType() == Byte.class) || fields[i].getType().getName().equalsIgnoreCase("byte")) {
-					byte value = (byte) cursor.getInt(cursor.getColumnIndex(columnName));
-
-					getClass().getMethod(getSetter(fieldName), Byte.class).invoke(this, value);
-				} else if (fields[i].getType().isArray() && fields[i].getType().getCanonicalName().equalsIgnoreCase("byte[]")) {
-					byte[] value = cursor.getBlob(cursor.getColumnIndex(columnName));
-
-					getClass().getMethod(getSetter(fieldName), byte[].class).invoke(this, value);
-				} else if (fields[i].getType() == Date.class) {
-					Long long_date = cursor.getLong(cursor.getColumnIndex(columnName));
-
-					if ((long_date != null) && (long_date > 0)) {
-						Calendar c = Calendar.getInstance();
-						c.setTimeInMillis(long_date);
-						getClass().getMethod(getSetter(fieldName), Date.class).invoke(this, c.getTime());
-					} else {
-						getClass().getMethod(getSetter(fieldName), Date.class).invoke(this, long_date);
-					}
-				} else if (fields[i].getType() == Calendar.class) {
-					Long long_date = cursor.getLong(cursor.getColumnIndex(columnName));
-
-					if ((long_date != null) && (long_date > 0)) {
-						Calendar calendar = Calendar.getInstance();
-						calendar.setTimeInMillis(long_date);
-						getClass().getMethod(getSetter(fieldName), Calendar.class).invoke(this, calendar);
-					} else {
-						getClass().getMethod(getSetter(fieldName), Calendar.class).invoke(this, long_date);
-					}
-
-				} else if (fields[i].getType().isEnum()) {
-
-					Integer value = cursor.getInt(cursor.getColumnIndex(columnName));
-					Enum[] enumConstants = (Enum[]) fields[i].getType().getEnumConstants();
-					EnumInterface enumInt = EnumUtils.getById(value, (EnumInterface[]) enumConstants);
-
-					getClass().getMethod(getSetter(fieldName), enumInt.getClass()).invoke(this, enumInt);
-
+				} catch (Exception e) {
+					Log.v(DplProvider.class.getName(), "Can't fill object field '" + fieldName + "', from class " + getClass().getName());
 				}
-			} catch (Exception e) {
-				Log.v(DplProvider.class.getName(), "Can't fill object field '" + fieldName + "', from class " + getClass().getName());
 			}
 		}
 	}

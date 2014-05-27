@@ -42,6 +42,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	@DplIgnore
 	private DataBaseAction dataBaseAction = DataBaseAction.NONE;
 
+	@Deprecated
 	private transient Context context;
 
 	/**
@@ -52,10 +53,16 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
 	}
 
+	public DplBaseEntity(Cursor cursor) {
+		fillObject(cursor);
+	}
+
+	@Deprecated
 	public DplBaseEntity(Context context) {
 		this.context = context;
 	}
 
+	@Deprecated
 	public DplBaseEntity(Context context, Cursor cursor) {
 		this.context = context;
 		fillObject(cursor);
@@ -77,22 +84,35 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		this.dataBaseAction = dataBaseAction;
 	}
 
+	@Deprecated
 	public Context getContext() {
 		return context;
 	}
 
+	@Deprecated
 	public void setContext(Context context) {
 		this.context = context;
 	}
 
+	@Deprecated
 	public Uri getContentUri() {
 		return Uri.parse(getContentUriBase() + getClass().getSimpleName());
 	}
 
+	public Uri getContentUri(Context context) {
+		return Uri.parse(getContentUriBase(context) + getClass().getSimpleName());
+	}
+
+	@Deprecated
 	public String getContentUriBase() {
 		return DplProvider.CONTENT + DplProvider.getAuthority(context) + DplProvider.SEPARATOR;
 	}
 
+	public String getContentUriBase(Context context) {
+		return DplProvider.CONTENT + DplProvider.getAuthority(context) + DplProvider.SEPARATOR;
+	}
+
+	@Deprecated
 	private boolean verifySuperClassTablesAndSave(Uri uri, ContentFiller contentFiller, boolean saveNullValues) {
 		if ((contentFiller == null) || (contentFiller.getValues() == null) || (uri == null)) {
 			throw new IllegalArgumentException();
@@ -169,14 +189,102 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		return returnFlag;
 	}
 
+	private boolean verifySuperClassTablesAndSave(Context context, Uri uri, ContentFiller contentFiller, boolean saveNullValues) {
+		if ((contentFiller == null) || (contentFiller.getValues() == null) || (uri == null)) {
+			throw new IllegalArgumentException();
+		}
+
+		boolean returnFlag = true;
+
+		boolean isNewRegister = isNewRegister(context, uri);
+
+		if (contentFiller.getSuperClass() != null) {
+			ContentFiller superContentFiller = getContentFiller(context, contentFiller.getSuperClass(), saveNullValues);
+			Uri superUri = DplProvider.getContentUri(context, contentFiller.getSuperClass());
+
+			returnFlag = verifySuperClassTablesAndSave(context, superUri, superContentFiller, saveNullValues);
+		}
+
+		if (returnFlag) {
+			if ((get_id() != null) && isNewRegister) {
+				contentFiller.getValues().put(_ID, get_id());
+			}
+
+			/**
+			 * Save if have some field to save in this table.
+			 * This is used when have more than one table on this object (hierarchical tables).
+			 * So if don't have any field in this ContentValue, maybe it was called to save some
+			 * field in other table.
+			 */
+			if (contentFiller.getValues().size() > 0) {
+				returnFlag = save(context, uri, contentFiller.getValues());
+			}
+
+			if (returnFlag && isNewRegister && (contentFiller.getLists() != null) && !contentFiller.getLists().isEmpty()) {
+				for (Field field : contentFiller.getLists()) {
+					DplEnumList dlpEnumList = null;
+
+					String table = null;
+					String objColumn = null;
+					String enumColumn = null;
+					if (field.isAnnotationPresent(DplEnumList.class)) {
+						dlpEnumList = field.getAnnotation(DplEnumList.class);
+
+						table = dlpEnumList.table();
+						objColumn = dlpEnumList.objColumn();
+						enumColumn = dlpEnumList.enumColumn();
+
+						delete(context, table, objColumn, get_id());
+					}
+
+					try {
+						Collection<?> list = (Collection<?>) getClass().getMethod(getGetter(field.getName())).invoke(this);
+
+						if (list != null) {
+							for (Object obj : list) {
+								if (obj instanceof DplBaseEntity) {
+									((DplBaseEntity<?>) obj).save(context);
+								} else if ((obj instanceof EnumInterface) && field.isAnnotationPresent(DplEnumList.class)) {
+									saveOnRelationshipTable(context, table, objColumn, get_id(), enumColumn, Long.valueOf(((EnumInterface) obj).getId()));
+								}
+							}
+						}
+					} catch (IllegalArgumentException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					} catch (NoSuchMethodException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+
+		return returnFlag;
+	}
+
+	@Deprecated
 	public boolean save(Uri uri, ContentValues values) {
 		return save(uri, values, null, null);
 	}
 
+	public boolean save(Context context, Uri uri, ContentValues values) {
+		return save(context, uri, values, null, null);
+	}
+
+	@Deprecated
 	public boolean save(boolean saveNullValues) {
 		ContentFiller contentFiller = getContentFiller(this.getClass(), saveNullValues);
 
 		return verifySuperClassTablesAndSave(getContentUri(), contentFiller, saveNullValues);
+	}
+
+	public boolean save(Context context, boolean saveNullValues) {
+		ContentFiller contentFiller = getContentFiller(context, this.getClass(), saveNullValues);
+
+		return verifySuperClassTablesAndSave(context, getContentUri(context), contentFiller, saveNullValues);
 	}
 
 	/**
@@ -187,6 +295,11 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * @param values
 	 * @return A boolean if was success or not the operation.
 	 */
+	public boolean save(Context context, ContentValues values) {
+		return save(context, getContentUri(context), values);
+	}
+
+	@Deprecated
 	public boolean save(ContentValues values) {
 		return save(getContentUri(), values);
 	}
@@ -201,6 +314,11 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * @param selectionArgs
 	 * @return A boolean if was success or not the operation.
 	 */
+	public boolean save(Context context, ContentValues values, String selection, String[] selectionArgs) {
+		return save(context, getContentUri(context), values, selection, selectionArgs);
+	}
+
+	@Deprecated
 	public boolean save(ContentValues values, String selection, String[] selectionArgs) {
 		return save(getContentUri(), values, selection, selectionArgs);
 	}
@@ -211,10 +329,57 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * 
 	 * @return
 	 */
+	public boolean save(Context context) {
+		return save(context, true);
+	}
+
+	@Deprecated
 	public boolean save() {
 		return save(true);
 	}
 
+	public boolean save(Context context, Uri uri, ContentValues values, String selection, String[] selectionArgs) throws IllegalArgumentException {
+		if ((values == null) || (uri == null)) {
+			throw new IllegalArgumentException();
+		}
+
+		if (isNewRegister(context, uri)) {
+			Uri newUri = context.getContentResolver().insert(uri, values);
+
+			try {
+				long id = ContentUris.parseId(newUri);
+
+				set_id(id);
+
+				setDataBaseAction(DataBaseAction.NONE);
+
+				return true;
+			} catch (NumberFormatException e) {
+				Log.e(DBHelper.CATEGORY, e.getMessage());
+			} catch (UnsupportedOperationException e) {
+				Log.e(DBHelper.CATEGORY, e.getMessage());
+			}
+		} else {
+			if (selection == null) {
+				selectionArgs = null;
+				uri = ContentUris.withAppendedId(uri, get_id());
+			}
+
+			try {
+				context.getContentResolver().update(uri, values, selection, selectionArgs);
+
+				setDataBaseAction(DataBaseAction.NONE);
+
+				return true;
+			} catch (Exception e) {
+				Log.e(DBHelper.CATEGORY, e.getMessage());
+			}
+		}
+
+		return false;
+	}
+
+	@Deprecated
 	public boolean save(Uri uri, ContentValues values, String selection, String[] selectionArgs) throws IllegalArgumentException {
 		if ((values == null) || (uri == null)) {
 			throw new IllegalArgumentException();
@@ -270,6 +435,28 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * @param enumId
 	 *            Id of enum.
 	 */
+	private boolean saveOnRelationshipTable(Context context, String table, String objColumn, Long objId, String enumColumn, Long enumId) {
+		Uri uri = getContentUri(context);
+
+		if (uri != null) {
+			ContentValues values = new ContentValues();
+
+			values.put(objColumn, objId);
+			values.put(enumColumn, enumId);
+
+			Uri newUri = context.getContentResolver().insert(uri, values);
+
+			long id = ContentUris.parseId(newUri);
+
+			setDataBaseAction(DataBaseAction.NONE);
+
+			return (id != -1);
+		}
+
+		return false;
+	}
+
+	@Deprecated
 	private boolean saveOnRelationshipTable(String table, String objColumn, Long objId, String enumColumn, Long enumId) {
 		Uri uri = getContentUri();
 
@@ -301,6 +488,18 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * @param mainObjId
 	 *            Id of main object.
 	 */
+	private void delete(Context context, String table, String objColumn, Long objId) {
+		Uri uri = getContentUri(context);
+
+		if (uri != null) {
+			String where = objColumn + DplProvider.SELECTION_EQUALS;
+			String[] selectionArgs = new String[] {objId.toString()};
+
+			context.getContentResolver().delete(uri, where, selectionArgs);
+		}
+	}
+
+	@Deprecated
 	private void delete(String table, String objColumn, Long objId) {
 		Uri uri = getContentUri();
 
@@ -317,6 +516,11 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * 
 	 * @return The number of rows deleted.
 	 */
+	public int deleteAll(Context context) {
+		return delete(context, null, null, false);
+	}
+
+	@Deprecated
 	public int deleteAll() {
 		return delete(null, null, false);
 	}
@@ -326,6 +530,11 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * 
 	 * @return The number of rows deleted.
 	 */
+	public int delete(Context context) {
+		return delete(context, null, null, true);
+	}
+
+	@Deprecated
 	public int delete() {
 		return delete(null, null, true);
 	}
@@ -337,10 +546,37 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * @param selectionArgs
 	 * @return The number of rows deleted.
 	 */
+	public int delete(Context context, String where, String[] selectionArgs) {
+		return delete(context, where, selectionArgs, false);
+	}
+
+	@Deprecated
 	public int delete(String where, String[] selectionArgs) {
 		return delete(where, selectionArgs, false);
 	}
 
+	private int delete(Context context, String where, String[] selectionArgs, boolean byIdFlag) {
+		Uri uri = getContentUri(context);
+
+		if (byIdFlag) {
+			uri = ContentUris.withAppendedId(uri, get_id());
+		}
+
+		Class<?> supeClass = getClass().getSuperclass();
+		do {
+			if (supeClass.isAnnotationPresent(DplTable.class)) {
+				Uri uriSuperClass = DplProvider.getContentUri(context, supeClass);
+
+				context.getContentResolver().delete(uriSuperClass, DplBaseEntity._ID + DplProvider.SELECTION_EQUALS, new String[] {get_id().toString()});
+			}
+
+			supeClass = supeClass.getSuperclass();
+		} while (supeClass != Object.class);
+
+		return context.getContentResolver().delete(uri, where, selectionArgs);
+	}
+
+	@Deprecated
 	private int delete(String where, String[] selectionArgs, boolean byIdFlag) {
 		Uri uri = getContentUri();
 
@@ -367,14 +603,67 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 	 * 
 	 * @return ArrayList with all registers on this table
 	 */
+	public ArrayList<T> query(Context context) {
+		return query(context, null, null, null, null);
+	}
+
+	@Deprecated
 	public ArrayList<T> query() {
 		return query(null, null, null, null);
 	}
 
+	public ArrayList<T> query(Context context, String selection, String[] selectionArgs) {
+		return query(context, null, selection, selectionArgs, null);
+	}
+
+	@Deprecated
 	public ArrayList<T> query(String selection, String[] selectionArgs) {
 		return query(null, selection, selectionArgs, null);
 	}
 
+	public ArrayList<T> query(Context context, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+		ArrayList<T> entities = new ArrayList<T>();
+		Uri uri = getContentUri(context);
+
+		Cursor cursor = null;
+		try {
+			cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, sortOrder);
+
+			if (cursor.moveToFirst()) {
+				try {
+					@SuppressWarnings("unchecked")
+					final Constructor<T> entityConstructor = (Constructor<T>) getClass().getConstructor(new Class[] {Context.class});
+
+					do {
+						try {
+							T entity = entityConstructor.newInstance(context);
+							((DplBaseEntity<?>) entity).fillObject(cursor);
+
+							entities.add(entity);
+						} catch (InstantiationException e) {
+							e.printStackTrace();
+						} catch (IllegalAccessException e) {
+							e.printStackTrace();
+						} catch (IllegalArgumentException e) {
+							e.printStackTrace();
+						} catch (InvocationTargetException e) {
+							e.printStackTrace();
+						}
+					} while (cursor.moveToNext());
+				} catch (NoSuchMethodException e) {
+					e.printStackTrace();
+				}
+			}
+		} finally {
+			if (cursor != null) {
+				cursor.close();
+			}
+		}
+
+		return entities;
+	}
+
+	@Deprecated
 	public ArrayList<T> query(String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 		ArrayList<T> entities = new ArrayList<T>();
 		Uri uri = getContentUri();
@@ -447,10 +736,32 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		return count;
 	}
 
+	public boolean isNewRegister(Context context) {
+		return isNewRegister(context, getContentUri(context));
+	}
+
+	@Deprecated
 	public boolean isNewRegister() {
 		return isNewRegister(getContentUri());
 	}
 
+	public boolean isNewRegister(Context context, Uri uri) {
+		int count = 0;
+		if (get_id() != null) {
+			String selection = DplBaseEntity._ID + DplProvider.SELECTION_EQUALS;
+			String[] selectionArgs = new String[] {get_id().toString()};
+
+			count = count(context, uri, selection, selectionArgs);
+
+			if (count <= 0) {
+				setDataBaseAction(DataBaseAction.NEW);
+			}
+		}
+
+		return ((get_id() == null) || (getDataBaseAction() == DataBaseAction.NEW));
+	}
+
+	@Deprecated
 	public boolean isNewRegister(Uri uri) {
 		int count = 0;
 		if (get_id() != null) {
@@ -467,26 +778,71 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		return ((get_id() == null) || (getDataBaseAction() == DataBaseAction.NEW));
 	}
 
+	public void fillObject(Context context, long _id) {
+		set_id(_id);
+
+		fillObject(context);
+	}
+
+	@Deprecated
 	public void fillObject(long _id) {
 		set_id(_id);
 
 		fillObject();
 	}
 
+	public void fillObject(Context context) {
+		fillObject(context, null, null, null, null);
+	}
+
+	@Deprecated
 	public void fillObject() {
 		fillObject(null, null, null, null);
 	}
 
+	public void fillObject(Context context, String[] projection) {
+		fillObject(context, projection, null, null, null);
+	}
+
+	@Deprecated
 	public void fillObject(String[] projection) {
 		fillObject(projection, null, null, null);
 	}
 
+	public void fillObject(Context context, long _id, String[] projection) {
+		set_id(_id);
+
+		fillObject(context, projection, null, null, null);
+	}
+
+	@Deprecated
 	public void fillObject(long _id, String[] projection) {
 		set_id(_id);
 
 		fillObject(projection, null, null, null);
 	}
 
+	public void fillObject(Context context, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+		Uri uri = getContentUri(context);
+		if (selection == null) {
+			uri = ContentUris.withAppendedId(uri, get_id());
+		}
+
+		Cursor cursor = null;
+		try {
+			cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, sortOrder);
+
+			if (cursor.moveToFirst()) {
+				fillObject(cursor);
+			}
+		} finally {
+			if (cursor != null) {
+				cursor.close();
+			}
+		}
+	}
+
+	@Deprecated
 	public void fillObject(String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 		Uri uri = getContentUri();
 		if (selection == null) {
@@ -507,6 +863,40 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		}
 	}
 
+	public ContentFiller getContentFiller(Context context, Class<?> cls, boolean saveNullValues) {
+		ContentFiller contentFiller = new ContentFiller();
+		contentFiller.setValues(new ContentValues());
+		contentFiller.setLists(new ArrayList<Field>());
+
+		Field fields[];
+		ArrayList<Field> fieldsArray = new ArrayList<Field>();
+
+		fieldsArray.addAll(Arrays.asList(cls.getDeclaredFields()));
+
+		Class<?> superClass = cls.getSuperclass();
+		while (!superClass.equals(Object.class)) {
+			if (superClass.isAnnotationPresent(DplTable.class)) {
+				/**
+				 * Add DplBaseEntity Declared Fields to get _id on fields for this child table.
+				 */
+				fieldsArray.addAll(Arrays.asList(DplBaseEntity.class.getDeclaredFields()));
+
+				contentFiller.setSuperClass(superClass);
+
+				break;
+			} else {
+				fieldsArray.addAll(Arrays.asList(superClass.getDeclaredFields()));
+
+				superClass = superClass.getSuperclass();
+			}
+		}
+
+		fields = fieldsArray.toArray(new Field[fieldsArray.size()]);
+
+		return fillContentFiller(context, fields, contentFiller, saveNullValues);
+	}
+
+	@Deprecated
 	public ContentFiller getContentFiller(Class<?> cls, boolean saveNullValues) {
 		ContentFiller contentFiller = new ContentFiller();
 		contentFiller.setValues(new ContentValues());
@@ -540,6 +930,149 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 		return fillContentFiller(fields, contentFiller, saveNullValues);
 	}
 
+	public ContentFiller fillContentFiller(Context context, Field[] fields, ContentFiller contentFiller, boolean saveNullValues) {
+
+		for (Integer i = 0; i < fields.length; i++) {
+			if (Modifier.isStatic(fields[i].getModifiers()) || fields[i].isAnnotationPresent(DplIgnore.class)) {
+				continue;
+			}
+
+			String fieldName = fields[i].getName();
+			String columnName = fieldName;
+
+			if (fields[i].isAnnotationPresent(DplColumn.class)) {
+				DplColumn dplColumn = fields[i].getAnnotation(DplColumn.class);
+				String dplColumnName = dplColumn.name();
+				if ((dplColumnName != null) && (dplColumnName.length() > 0)) {
+					columnName = dplColumnName;
+				}
+			}
+
+			if (fields[i].isAnnotationPresent(DplObject.class)) {
+				DplObject dlpObject = fields[i].getAnnotation(DplObject.class);
+				boolean saveFlag = dlpObject.save();
+
+				try {
+					Object objetoInterno = this.getClass().getMethod(getGetter(fieldName)).invoke(this);
+
+					if ((objetoInterno != null) && (objetoInterno instanceof DplBaseEntity)) {
+						DplBaseEntity<?> ent = (DplBaseEntity<?>) objetoInterno;
+
+						if (saveFlag) {
+							ent.save(context, saveNullValues);
+						}
+
+						Long idDoObjeto = ent.get_id();
+						if ((idDoObjeto != null) && (idDoObjeto != -1)) {
+							contentFiller.getValues().put(columnName, idDoObjeto);
+						}
+					}
+				} catch (Exception e) {
+					continue;
+				}
+
+				continue;
+
+			} else {
+				try {
+					if (fields[i].isAnnotationPresent(DplList.class)) {
+						contentFiller.getLists().add(fields[i]);
+
+					} else if ((fields[i].getType() == String.class) || fields[i].getType().getName().equalsIgnoreCase("string")) {
+						String value = (String) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
+
+						if ((value != null) || saveNullValues) {
+							contentFiller.getValues().put(columnName, value);
+						}
+					} else if ((fields[i].getType() == Integer.class) || fields[i].getType().getName().equalsIgnoreCase("int")) {
+						Integer value = (Integer) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
+
+						if ((value != null) || saveNullValues) {
+							contentFiller.getValues().put(columnName, value);
+						}
+					} else if ((fields[i].getType() == Double.class) || fields[i].getType().getName().equalsIgnoreCase("double")) {
+						Double value = (Double) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
+
+						if ((value != null) || saveNullValues) {
+							contentFiller.getValues().put(columnName, value);
+						}
+					} else if ((fields[i].getType() == Float.class) || fields[i].getType().getName().equalsIgnoreCase("float")) {
+						Float value = (Float) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
+
+						if ((value != null) || saveNullValues) {
+							contentFiller.getValues().put(columnName, value);
+						}
+					} else if ((fields[i].getType() == Long.class) || fields[i].getType().getName().equalsIgnoreCase("long")) {
+						Long value = (Long) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
+
+						if ((value != null) || saveNullValues) {
+							contentFiller.getValues().put(columnName, value);
+						}
+					} else if ((fields[i].getType() == Boolean.class) || fields[i].getType().getName().equalsIgnoreCase("boolean")) {
+						Boolean value = (Boolean) this.getClass().getMethod(getGetter(fieldName, true)).invoke(this);
+
+						if ((value != null) || saveNullValues) {
+							contentFiller.getValues().put(columnName, value);
+						}
+					} else if (fields[i].getType() == Date.class) {
+						Date date = (Date) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
+
+						if (date != null) {
+							contentFiller.getValues().put(columnName, date.getTime());
+						} else if (saveNullValues) {
+							String value = null;
+							contentFiller.getValues().put(columnName, value);
+						}
+					} else if (fields[i].getType() == Calendar.class) {
+						Calendar calendar = (Calendar) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
+
+						if (calendar != null) {
+							contentFiller.getValues().put(columnName, calendar.getTimeInMillis());
+						} else if (saveNullValues) {
+							String values = null;
+							contentFiller.getValues().put(columnName, values);
+						}
+
+					} else if ((fields[i].getType() == Byte.class) || fields[i].getType().getName().equalsIgnoreCase("byte")) {
+						Byte value = (Byte) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
+
+						if ((value != null) || saveNullValues) {
+							contentFiller.getValues().put(columnName, value);
+						}
+					} else if (fields[i].getType().isArray() && fields[i].getType().getCanonicalName().equalsIgnoreCase("byte[]")) {
+						byte[] value = (byte[]) this.getClass().getMethod(getGetter(fieldName)).invoke(this);
+
+						if ((value != null) || saveNullValues) {
+							contentFiller.getValues().put(columnName, value);
+						}
+					} else if (fields[i].getType().isEnum()) {
+						Enum<?> enumObject = ((Enum<?>) this.getClass().getMethod(getGetter(fieldName)).invoke(this));
+
+						if (enumObject != null) {
+							if (enumObject instanceof EnumInterface) {
+								EnumInterface enumInterface = (EnumInterface) enumObject;
+
+								Integer enumId = (enumInterface != null) ? enumInterface.getId() : null;
+
+								contentFiller.getValues().put(columnName, enumId);
+							} else {
+								contentFiller.getValues().put(columnName, enumObject.toString());
+							}
+						} else if (saveNullValues) {
+							String values = null;
+							contentFiller.getValues().put(columnName, values);
+						}
+					}
+				} catch (Exception e) {
+					Log.v(DplProvider.class.getName(), "Can't get object field '" + fieldName + "', from class " + this.getClass().getName(), e);
+				}
+			}
+		}
+
+		return contentFiller;
+	}
+
+	@Deprecated
 	public ContentFiller fillContentFiller(Field[] fields, ContentFiller contentFiller, boolean saveNullValues) {
 
 		for (Integer i = 0; i < fields.length; i++) {
@@ -727,69 +1260,66 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 				try {
 					if (fields[i].isAnnotationPresent(DplObject.class)) {
 						Long id = cursor.getLong(columnIndex);
-						
+
 						DplBaseEntity entity = null;
 						if ((id != null) && (id != 0)) {
-							@SuppressWarnings("unchecked")
-							final Constructor<? extends DplBaseEntity<?>> ec = (Constructor<DplBaseEntity<?>>) fields[i].getType().getConstructor(new Class[] {Context.class});
-							
-							entity = ec.newInstance(context);
+							entity = (DplBaseEntity) fields[i].getType().newInstance();
 							entity.set_id(id);
 						}
-						
+
 						getClass().getMethod(getSetter(fieldName), fields[i].getType()).invoke(this, entity);
-						
+
 					} else if ((fields[i].getType() == String.class) || fields[i].getType().getName().equalsIgnoreCase("string")) {
 						String value = cursor.getString(columnIndex);
-						
+
 						getClass().getMethod(getSetter(fieldName), String.class).invoke(this, value);
-						
+
 					} else if ((fields[i].getType() == Integer.class) || fields[i].getType().getName().equalsIgnoreCase("int")) {
 						Integer value = null;
 						if (!cursor.isNull(columnIndex)) {
 							value = cursor.getInt(columnIndex);
 						}
-						
+
 						getClass().getMethod(getSetter(fieldName), Integer.class).invoke(this, value);
 					} else if ((fields[i].getType() == Double.class) || fields[i].getType().getName().equalsIgnoreCase("double")) {
 						Double value = null;
 						if (!cursor.isNull(columnIndex)) {
 							value = cursor.getDouble(columnIndex);
 						}
-						
+
 						getClass().getMethod(getSetter(fieldName), Double.class).invoke(this, value);
 					} else if ((fields[i].getType() == Float.class) || fields[i].getType().getName().equalsIgnoreCase("float")) {
 						Float value = null;
 						if (!cursor.isNull(columnIndex)) {
 							value = cursor.getFloat(columnIndex);
 						}
-						
+
 						getClass().getMethod(getSetter(fieldName), Float.class).invoke(this, value);
 					} else if ((fields[i].getType() == Long.class) || fields[i].getType().getName().equalsIgnoreCase("long")) {
 						Long value = null;
 						if (!cursor.isNull(columnIndex)) {
 							value = cursor.getLong(columnIndex);
 						}
-						
+
 						getClass().getMethod(getSetter(fieldName), Long.class).invoke(this, value);
 					} else if ((fields[i].getType() == Boolean.class) || fields[i].getType().getName().equalsIgnoreCase("boolean")) {
 						Boolean value = null;
 						if (!cursor.isNull(columnIndex)) {
 							value = (cursor.getInt(columnIndex) > 0);
 						}
-						
+
 						getClass().getMethod(getSetter(fieldName), Boolean.class).invoke(this, value);
 					} else if ((fields[i].getType() == Byte.class) || fields[i].getType().getName().equalsIgnoreCase("byte")) {
 						byte value = (byte) cursor.getInt(columnIndex);
-						
+
 						getClass().getMethod(getSetter(fieldName), Byte.class).invoke(this, value);
 					} else if (fields[i].getType().isArray() && fields[i].getType().getCanonicalName().equalsIgnoreCase("byte[]")) {
 						byte[] value = cursor.getBlob(columnIndex);
-						
+
 						getClass().getMethod(getSetter(fieldName), byte[].class).invoke(this, value);
 					} else if (fields[i].getType() == Date.class) {
 						Long long_date = cursor.getLong(columnIndex);
-						
+
 						if ((long_date != null) && (long_date > 0)) {
 							Calendar c = Calendar.getInstance();
 							c.setTimeInMillis(long_date);
@@ -799,7 +1329,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 						}
 					} else if (fields[i].getType() == Calendar.class) {
 						Long long_date = cursor.getLong(columnIndex);
-						
+
 						if ((long_date != null) && (long_date > 0)) {
 							Calendar calendar = Calendar.getInstance();
 							calendar.setTimeInMillis(long_date);
@@ -807,15 +1337,15 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 						} else {
 							getClass().getMethod(getSetter(fieldName), Calendar.class).invoke(this, long_date);
 						}
-						
+
 					} else if (fields[i].getType().isEnum()) {
-						
+
 						Integer value = cursor.getInt(columnIndex);
 						Enum[] enumConstants = (Enum[]) fields[i].getType().getEnumConstants();
 						EnumInterface enumInt = EnumUtils.getById(value, (EnumInterface[]) enumConstants);
-						
+
 						getClass().getMethod(getSetter(fieldName), enumInt.getClass()).invoke(this, enumInt);
-						
+
 					}
 				} catch (Exception e) {
 					Log.v(DplProvider.class.getName(), "Can't fill object field '" + fieldName + "', from class " + getClass().getName());

@@ -1,7 +1,5 @@
 package org.dpl.adapter;
 
-import java.lang.reflect.Constructor;
-
 import org.dpl.entity.DplBaseEntity;
 
 import android.content.Context;
@@ -15,17 +13,17 @@ import android.support.v4.widget.SimpleCursorAdapter;
 
 public class BaseCursorAdapter<T> extends SimpleCursorAdapter implements LoaderCallbacks<Cursor> {
 
-	private Context context;
-	private Class<T> cls;
+	private final Context context;
+	private final Class<T> cls;
 
-	private Uri uri;
-	private String[] projection;
-	private String selection;
-	private String[] selectionArgs;
-	private String sortOrder;
-	
-	public BaseCursorAdapter(Context context, Class<T> cls, int layout, Cursor cursor, String[] from, int[] to, int flags, Uri uri, String[] projection,
-			String selection, String[] selectionArgs, String sortOrder) {
+	private final Uri uri;
+	private final String[] projection;
+	private final String selection;
+	private final String[] selectionArgs;
+	private final String sortOrder;
+
+	public BaseCursorAdapter(Context context, Class<T> cls, int layout, Cursor cursor, String[] from, int[] to, int flags, Uri uri, String[] projection, String selection, String[] selectionArgs,
+			String sortOrder) {
 		super(context, layout, cursor, from, to, flags);
 		this.context = context;
 		this.cls = cls;
@@ -35,17 +33,14 @@ public class BaseCursorAdapter<T> extends SimpleCursorAdapter implements LoaderC
 		this.selectionArgs = selectionArgs;
 		this.sortOrder = sortOrder;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public T getItem(int position) {
 		Cursor cursor = (Cursor) super.getItem(position);
 
-		Constructor<T> entityConstructor;
 		try {
-			entityConstructor = (Constructor<T>) cls.getConstructor(new Class[] {Context.class});
-
-			T entity = entityConstructor.newInstance(context);
+			T entity = cls.newInstance();
 
 			((DplBaseEntity<T>) entity).fillObject(cursor);
 
@@ -54,7 +49,7 @@ public class BaseCursorAdapter<T> extends SimpleCursorAdapter implements LoaderC
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
 		return new CursorLoader(context, uri, projection, selection, selectionArgs, sortOrder);

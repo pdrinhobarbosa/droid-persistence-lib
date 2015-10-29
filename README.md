@@ -8,6 +8,13 @@ Developed By
 
 * Pedro Barbosa - <pdrinhobarbosa@gmail.com>
 
+Gradle Import
+============
+
+```
+compile 'org.dpl:droid-persistence-lib:+'
+```
+
 Steps
 =====
 

@@ -16,6 +16,8 @@ gen
 build
 .metadata
 .gradle
+.bin
+.lock
 
 # Eclipse
 .project

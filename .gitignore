@@ -30,6 +30,7 @@ build
 *.ipr
 *.iws
 gen-external-apklibs
+local.properties
 
 #Maven
 target

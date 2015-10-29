@@ -13,6 +13,11 @@ CVS
 # Android generated
 bin
 gen
+build
+.metadata
+.gradle
+.bin
+.lock
 
 # Eclipse
 .project
@@ -24,7 +29,6 @@ gen
 *.iml
 *.ipr
 *.iws
-classes
 gen-external-apklibs
 
 #Maven

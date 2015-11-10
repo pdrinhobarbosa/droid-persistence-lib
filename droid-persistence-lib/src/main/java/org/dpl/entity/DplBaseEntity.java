@@ -112,7 +112,7 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
                 returnFlag = save(context, uri, contentFiller.getValues());
             }
 
-            if (returnFlag && isNewRegister && (contentFiller.getLists() != null) && !contentFiller.getLists().isEmpty()) {
+            if (returnFlag && (contentFiller.getLists() != null) && !contentFiller.getLists().isEmpty()) {
                 for (Field field : contentFiller.getLists()) {
                     DplEnumList dlpEnumList;
 
@@ -135,19 +135,13 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
                         if (list != null) {
                             for (Object obj : list) {
                                 if (obj instanceof DplBaseEntity) {
-                                    ((DplBaseEntity<?>) obj).save(context);
+                                    ((DplBaseEntity<?>) obj).save(context, saveNullValues);
                                 } else if ((obj instanceof EnumInterface) && field.isAnnotationPresent(DplEnumList.class)) {
                                     saveOnRelationshipTable(context, table, objColumn, get_id(), enumColumn, Long.valueOf(((EnumInterface) obj).getId()));
                                 }
                             }
                         }
-                    } catch (IllegalArgumentException e) {
-                        e.printStackTrace();
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
-                    } catch (NoSuchMethodException e) {
+                    } catch (IllegalArgumentException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
                 }

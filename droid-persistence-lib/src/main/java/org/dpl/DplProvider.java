@@ -123,14 +123,6 @@ public abstract class DplProvider extends ContentProvider {
         mSQLiteHelper.getWritableDatabase().execSQL(sql);
     }
 
-    public static void execSQLReadableDB(String sql, Object[] bindArgs) {
-        mSQLiteHelper.getReadableDatabase().execSQL(sql, bindArgs);
-    }
-
-    public static void execSQReadableDB(String sql) {
-        mSQLiteHelper.getReadableDatabase().execSQL(sql);
-    }
-
     /**
      * Fill UriMatcher with URIs from your application.
      * Use the static final attribute 'URI_MATCHER'.

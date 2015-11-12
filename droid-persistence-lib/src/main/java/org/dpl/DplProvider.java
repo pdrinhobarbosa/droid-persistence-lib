@@ -1,8 +1,5 @@
 package org.dpl;
 
-import org.dpl.database.DBHelper;
-import org.dpl.entity.DplBaseEntity;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -12,6 +9,9 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.net.Uri;
 import android.util.Log;
+
+import org.dpl.database.DBHelper;
+import org.dpl.entity.DplBaseEntity;
 
 public abstract class DplProvider extends ContentProvider {
 
@@ -71,6 +71,65 @@ public abstract class DplProvider extends ContentProvider {
     public static final String SELECTION_IN = " IN(?)";
 
     public static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
+    private static final Object sLock = new Object();
+    private static DBHelper mSQLiteHelper;
+
+    /**
+     * By default, the will return the follow String:
+     * "<your_app_package_name> + .provider"
+     *
+     * @param context
+     * @return String name from your authority.
+     */
+    public static String getAuthority(Context context) {
+        return context.getPackageName() + ".provider";
+    }
+
+    /**
+     * By default, the lib will return the follow Stirng:
+     * "content://<your_app_package_name>.provider/<your_entity_simple_name>"
+     *
+     * @param context
+     * @param cls     - Your Entity
+     * @return String URI from your Entity.
+     */
+    public static Uri getContentUri(Context context, Class<?> cls) {
+        return Uri.parse(getContentUriBase(context) + cls.getSimpleName());
+    }
+
+    public static String getContentUriBase(Context context) {
+        return CONTENT + getAuthority(context) + SEPARATOR;
+    }
+
+    /**
+     * By default, the lib will return the follow Stirng:
+     * "content://<your_app_package_name>.provider/
+     * <table>
+     * "
+     *
+     * @param context
+     * @param table   - Your Enum table name
+     * @return String URI from your Entity.
+     */
+    public static Uri getContentUri(Context context, String table) {
+        return Uri.parse(CONTENT + getAuthority(context) + SEPARATOR + table);
+    }
+
+    public static void execSQLWritableDB(String sql, Object[] bindArgs) {
+        mSQLiteHelper.getWritableDatabase().execSQL(sql, bindArgs);
+    }
+
+    public static void execSQLWritableDB(String sql) {
+        mSQLiteHelper.getWritableDatabase().execSQL(sql);
+    }
+
+    public static void execSQLReadableDB(String sql, Object[] bindArgs) {
+        mSQLiteHelper.getReadableDatabase().execSQL(sql, bindArgs);
+    }
+
+    public static void execSQReadableDB(String sql) {
+        mSQLiteHelper.getReadableDatabase().execSQL(sql);
+    }
 
     /**
      * Fill UriMatcher with URIs from your application.
@@ -118,10 +177,6 @@ public abstract class DplProvider extends ContentProvider {
      */
     public abstract Class<?> getRClass();
 
-    private DBHelper mSQLiteHelper;
-
-    private static final Object sLock = new Object();
-
     @Override
     public boolean onCreate() {
         mSQLiteHelper = new DBHelper(getContext(), getRClass());
@@ -132,47 +187,6 @@ public abstract class DplProvider extends ContentProvider {
 
     public int match(Uri uri) {
         return URI_MATCHER.match(uri);
-    }
-
-    /**
-     * By default, the will return the follow String:
-     * "<your_app_package_name> + .provider"
-     *
-     * @param context
-     * @return String name from your authority.
-     */
-    public static String getAuthority(Context context) {
-        return context.getPackageName() + ".provider";
-    }
-
-    /**
-     * By default, the lib will return the follow Stirng:
-     * "content://<your_app_package_name>.provider/<your_entity_simple_name>"
-     *
-     * @param context
-     * @param cls     - Your Entity
-     * @return String URI from your Entity.
-     */
-    public static Uri getContentUri(Context context, Class<?> cls) {
-        return Uri.parse(getContentUriBase(context) + cls.getSimpleName());
-    }
-
-    public static String getContentUriBase(Context context) {
-        return CONTENT + getAuthority(context) + SEPARATOR;
-    }
-
-    /**
-     * By default, the lib will return the follow Stirng:
-     * "content://<your_app_package_name>.provider/
-     * <table>
-     * "
-     *
-     * @param context
-     * @param table   - Your Enum table name
-     * @return String URI from your Entity.
-     */
-    public static Uri getContentUri(Context context, String table) {
-        return Uri.parse(CONTENT + getAuthority(context) + SEPARATOR + table);
     }
 
     @Override

@@ -8,7 +8,7 @@ android {
         minSdkVersion 8
         targetSdkVersion 23
         versionCode 4
-        versionName "2.2.0"
+        versionName "2.3.0"
     }
 
     buildTypes {
@@ -42,7 +42,7 @@ publish {
     userOrg = 'droid-persistence-lib'
     groupId = 'org.dpl'
     artifactId = 'droid-persistence-lib'
-    publishVersion = '2.2.0'
+    publishVersion = '2.3.0'
     desc = 'Publish on jcenter'
     website = 'https://github.com/pdrinhobarbosa/droid-persistence-lib'
 }

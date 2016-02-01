@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion '23.0.1'
+    buildToolsVersion '23.0.2'
 
     defaultConfig {
         minSdkVersion 8
@@ -17,87 +17,32 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:23.1.0'
+    compile 'com.android.support:support-v4:23.1.1'
 }
 
-apply plugin: 'maven'
-apply plugin: 'signing'
+apply plugin: 'com.novoda.bintray-release' // must be applied after your artifact generating plugin (eg. java / com.android.library)
 
-version = "2.2.0"
-group = "org.dpl"
-
-task androidJavadocs(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-}
-
-task androidJavadocsJar(type: Jar) {
-    classifier = 'javadoc'
-    baseName = group
-    from androidJavadocs.destinationDir
-}
-
-task androidSourcesJar(type: Jar) {
-    classifier = 'sources'
-    baseName = group
-    from android.sourceSets.main.java.srcDirs
-}
-
-artifacts {
-    archives androidSourcesJar
-    archives androidJavadocsJar
-}
-
-configurations {
-    archives {
-        extendsFrom configurations.default
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.novoda:bintray-release:0.3.5'
     }
 }
 
-signing {
-    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
-}
-
-uploadArchives {
-    configuration = configurations.archives
-    repositories.mavenDeployer {
-        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-        repository(url: sonatypeRepo) {
-            authentication(userName: sonatypeUsername,
-                    password: sonatypePassword)
-        }
-
-        pom.project {
-            name 'Droid Persistence Lib'
-            packaging 'aar'
-            description 'A open source library to help your Android app persist data on SQLite using ContentProvider'
-            url 'https://github.com/pdrinhobarbosa/droid-persistence-lib'
-
-            scm {
-                url 'scm:git@github.com:pdrinhobarbosa/droid-persistence-lib.git'
-                connection 'scm:git@github.com:pdrinhobarbosa/droid-persistence-lib.git'
-                developerConnection 'scm:git@github.com:pdrinhobarbosa/droid-persistence-lib.git'
-            }
-
-            licenses {
-                license {
-                    name 'The Apache Software License, Version 2.0'
-                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    distribution 'repo'
-                }
-            }
-
-            developers {
-                developer {
-                    id 'phbo'
-                    name 'Pedro Henrique Barbosa de Oliveira'
-                    email 'pdrinhobarbosa@gmail.com'
-                }
-            }
-        }
-    }
+publish {
+    userOrg = 'droid-persistence-lib'
+    groupId = 'org.dpl'
+    artifactId = 'droid-persistence-lib'
+    publishVersion = '2.2.0'
+    desc = 'Publish on jcenter'
+    website = 'https://github.com/pdrinhobarbosa/droid-persistence-lib'
 }

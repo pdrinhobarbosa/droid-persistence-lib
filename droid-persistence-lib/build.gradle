@@ -1,5 +1,7 @@
 apply plugin: 'com.android.library'
 
+def libVersion = '2.3.0'
+
 android {
     compileSdkVersion 23
     buildToolsVersion '23.0.2'
@@ -8,7 +10,7 @@ android {
         minSdkVersion 8
         targetSdkVersion 23
         versionCode 4
-        versionName "2.3.0"
+        versionName libVersion
     }
 
     buildTypes {
@@ -42,7 +44,11 @@ publish {
     userOrg = 'droid-persistence-lib'
     groupId = 'org.dpl'
     artifactId = 'droid-persistence-lib'
-    publishVersion = '2.3.0'
+    publishVersion = libVersion
     desc = 'Publish on jcenter'
     website = 'https://github.com/pdrinhobarbosa/droid-persistence-lib'
+    issueTracker "${website}/issues"
+    repository "${website}.git"
+    bintrayUser bintray_user
+    bintrayKey bintray_apikey
 }

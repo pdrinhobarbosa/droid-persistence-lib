@@ -8,6 +8,15 @@ Developed By
 
 * Pedro Barbosa - <pdrinhobarbosa@gmail.com>
 
+Gradle Import
+============
+
+```
+compile 'com.github.pdrinhobarbosa:droid-persistence-lib:2.3.1'
+```
+
+Version 2.3.1 has now integration with Android Binding View. So your can use your Entities to binding your views directly 
+
 Steps
 =====
 

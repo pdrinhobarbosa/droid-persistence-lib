@@ -5,6 +5,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.databinding.BaseObservable;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.util.Log;
@@ -31,14 +32,13 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 
-public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
+public abstract class DplBaseEntity<T> extends BaseObservable implements BaseColumns, Serializable {
 
     private static final long serialVersionUID = -837161836030151140L;
-
-    public static final String DATABASE_ACTION = "dataBaseAction";
-
     private static final Object sSaveLock = new Object();
     private static final Object sIsNewRegisterLock = new Object();
+
+    public static final String DATABASE_ACTION = "dataBaseAction";
 
     private Long _id;
 
@@ -55,6 +55,57 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
 
     public DplBaseEntity(Cursor cursor) {
         fillObject(cursor);
+    }
+
+    public static int count(Context context, Class<?> cls) {
+        return count(context, cls, null, null);
+    }
+
+    public static int count(Context context, Class<?> cls, String selection, String[] selectionArgs) {
+        return count(context, DplProvider.getContentUri(context, cls), new String[]{"count(*) AS count"}, selection, selectionArgs);
+    }
+
+    public static int count(Context context, Uri uri, String selection, String[] selectionArgs) {
+        return count(context, uri, new String[]{"count(*) AS count"}, selection, selectionArgs);
+    }
+
+    public static int count(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs) {
+        int count = 0;
+
+        Cursor countCursor = null;
+        try {
+            countCursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
+
+            countCursor.moveToFirst();
+            count = countCursor.getInt(0);
+        } finally {
+            if (countCursor != null) {
+                countCursor.close();
+            }
+        }
+
+        return count;
+    }
+
+    @SuppressLint("DefaultLocale")
+    private static String getSetter(String fieldName) {
+        return "set" + fieldName.replaceFirst("" + fieldName.charAt(0), ("" + fieldName.charAt(0)).toUpperCase());
+    }
+
+    public static String getGetter(String fieldName) {
+        return getGetter(fieldName, false);
+    }
+
+    @SuppressLint("DefaultLocale")
+    private static String getGetter(String fieldName, boolean booleanField) {
+
+        if (booleanField) {
+            String methodName = "is" + fieldName.replaceFirst("" + fieldName.charAt(0), ("" + fieldName.charAt(0)).toUpperCase());
+            return methodName;
+        } else {
+            String methodName = "get" + fieldName.replaceFirst("" + fieldName.charAt(0), ("" + fieldName.charAt(0)).toUpperCase());
+            return methodName;
+        }
     }
 
     public Long get_id() {
@@ -384,36 +435,6 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
         }
 
         return entities;
-    }
-
-    public static int count(Context context, Class<?> cls) {
-        return count(context, cls, null, null);
-    }
-
-    public static int count(Context context, Class<?> cls, String selection, String[] selectionArgs) {
-        return count(context, DplProvider.getContentUri(context, cls), new String[]{"count(*) AS count"}, selection, selectionArgs);
-    }
-
-    public static int count(Context context, Uri uri, String selection, String[] selectionArgs) {
-        return count(context, uri, new String[]{"count(*) AS count"}, selection, selectionArgs);
-    }
-
-    public static int count(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs) {
-        int count = 0;
-
-        Cursor countCursor = null;
-        try {
-            countCursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
-
-            countCursor.moveToFirst();
-            count = countCursor.getInt(0);
-        } finally {
-            if (countCursor != null) {
-                countCursor.close();
-            }
-        }
-
-        return count;
     }
 
     public boolean isNewRegister(Context context) {
@@ -803,40 +824,6 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
         }
     }
 
-    @SuppressLint("DefaultLocale")
-    private static String getSetter(String fieldName) {
-        return "set" + fieldName.replaceFirst("" + fieldName.charAt(0), ("" + fieldName.charAt(0)).toUpperCase());
-    }
-
-    public static String getGetter(String fieldName) {
-        return getGetter(fieldName, false);
-    }
-
-    @SuppressLint("DefaultLocale")
-    private static String getGetter(String fieldName, boolean booleanField) {
-
-        if (booleanField) {
-            String methodName = "is" + fieldName.replaceFirst("" + fieldName.charAt(0), ("" + fieldName.charAt(0)).toUpperCase());
-            return methodName;
-        } else {
-            String methodName = "get" + fieldName.replaceFirst("" + fieldName.charAt(0), ("" + fieldName.charAt(0)).toUpperCase());
-            return methodName;
-        }
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + " id: " + get_id();
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = (prime * result) + ((_id == null) ? 0 : _id.hashCode());
-        return result;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -861,6 +848,19 @@ public abstract class DplBaseEntity<T> implements BaseColumns, Serializable {
         }
 
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + ((_id == null) ? 0 : _id.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " id: " + get_id();
     }
 
 }

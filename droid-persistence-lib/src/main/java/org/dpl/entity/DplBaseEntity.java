@@ -60,19 +60,25 @@ public abstract class DplBaseEntity<T> extends BaseObservable implements BaseCol
     public static int count(Context context, Class<?> cls) {
 
         int count = 0;
-        if (context != null) { count(context, cls, null, null); }
+        if (context != null) {
+            count = count(context, cls, null, null);
+        }
         return count;
     }
 
     public static int count(Context context, Class<?> cls, String selection, String[] selectionArgs) {
         int count = 0;
-        if (context != null) { count(context, DplProvider.getContentUri(context, cls), new String[]{"count(*) AS count"}, selection, selectionArgs); }
+        if (context != null) {
+            count = count(context, DplProvider.getContentUri(context, cls), new String[]{"count(*) AS count"}, selection, selectionArgs);
+        }
         return count;
     }
 
     public static int count(Context context, Uri uri, String selection, String[] selectionArgs) {
         int count = 0;
-        if (context != null) { count(context, uri, new String[]{"count(*) AS count"}, selection, selectionArgs); }
+        if (context != null) {
+            count = count(context, uri, new String[]{"count(*) AS count"}, selection, selectionArgs);
+        }
         return count;
     }
 
@@ -80,10 +86,12 @@ public abstract class DplBaseEntity<T> extends BaseObservable implements BaseCol
         int count = 0;
 
         if (context != null) {
-            Cursor countCursor = countCursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
+            Cursor countCursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
             if (countCursor != null) {
                 try {
-                    if (countCursor.moveToFirst()) { count = countCursor.getInt(0); }
+                    if (countCursor.moveToFirst()) {
+                        count = countCursor.getInt(0);
+                    }
                 } finally {
                     countCursor.close();
                 }
